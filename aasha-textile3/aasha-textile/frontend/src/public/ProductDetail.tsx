@@ -18,6 +18,11 @@ export default function ProductDetail() {
     api.get(`/products/${id}`).then(r => setP(r.data)).catch(() => setP(null));
   }, [id]);
 
+  // ✅ NAYA — Tab title product ke naam se set hoga
+  useEffect(() => {
+    if (p?.name) document.title = `${p.name_en || p.name} — Aasha Textile`;
+  }, [p]);
+
   const related = useProducts(p ? { category: p.category, limit: 8 } : { limit: 0 });
 
   if (p === null) return <Navigate to="/" replace />;
