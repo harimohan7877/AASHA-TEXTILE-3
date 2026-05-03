@@ -7,6 +7,7 @@ import WhatsAppFab from './WhatsAppFab';
 export default function PublicLayout() {
   const loc = useLocation();
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [loc.pathname]);
+  useEffect(() => { document.title = 'Aasha Textile'; }, []);
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col">
       <PublicHeader />
