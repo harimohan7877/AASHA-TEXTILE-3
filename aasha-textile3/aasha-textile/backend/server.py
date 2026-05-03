@@ -110,7 +110,8 @@ async def on_startup():
             "created_at": now_utc(),
         })
         logger.info(f"Seeded admin: {ADMIN_EMAIL}")
-  else:
+    else:
+        pass
     # Keep the password in sync with env on restart (simple for single-admin setup)
     if not pwd_context.verify(ADMIN_PASSWORD, existing["password_hash"]):
         await db.admins.update_one(
