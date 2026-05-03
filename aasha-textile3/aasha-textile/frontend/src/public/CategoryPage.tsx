@@ -3,7 +3,7 @@ import { ArrowLeft, Filter } from 'lucide-react';
 import { useCategories, useProducts, slugify } from './usePublicData';
 import ProductCard from './ProductCard';
 import { resolveImage } from '../lib/api';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -15,6 +15,11 @@ export default function CategoryPage() {
     return cats.find(c => (c.slug || slugify(c.name)) === decodedSlug) ||
            cats.find(c => c.name.toLowerCase() === decodedSlug.toLowerCase()) || null;
   }, [cats, decodedSlug]);
+
+  // ✅ NAYA — Tab title category ke naam se set hoga
+  useEffect(() => {
+    if (current?.name) document.title = `${current.name} — Aasha Textile`;
+  }, [current]);
 
   const products = useProducts(current ? { category: current.name, limit: 500 } : { limit: 0 });
 
