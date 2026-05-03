@@ -2,11 +2,14 @@
 Aasha Textile - Admin Panel Backend
 FastAPI + MongoDB + JWT Auth
 """
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Query, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Query, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -39,7 +42,10 @@ db = client[DB_NAME]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-app = FastAPI(title="Aasha Textile Admin API")
+app = FastAPI(title="Aasha Textile API")
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -351,7 +357,8 @@ class PasswordChange(BaseModel):
 # ============================================================
 
 @api.post("/auth/login", response_model=TokenResponse)
-async def login(payload: LoginRequest):
+@limiter.limit("5/minute")
+async def login(request: Request, payload: LoginRequest):
     admin = await db.admins.find_one({"email": payload.email.lower()})
     if not admin:
         raise HTTPException(status_code=401, detail="Invalid email or password")
