@@ -110,9 +110,14 @@ async def on_startup():
             "created_at": now_utc(),
         })
         logger.info(f"Seeded admin: {ADMIN_EMAIL}")
-   else:
-    # Password sync hataya — restart pe password overwrite nahi hoga
-    pass
+  else:
+    # Keep the password in sync with env on restart (simple for single-admin setup)
+    if not pwd_context.verify(ADMIN_PASSWORD, existing["password_hash"]):
+        await db.admins.update_one(
+            {"email": ADMIN_EMAIL},
+            {"$set": {"password_hash": pwd_context.hash(ADMIN_PASSWORD)}}
+        )
+        logger.info("Admin password synced from .env")
 
     # Settings seed / backfill defaults for missing keys
     DEFAULT_SETTINGS = {
