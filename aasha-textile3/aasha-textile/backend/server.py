@@ -244,8 +244,9 @@ class ProductIn(BaseModel):
     panna: Optional[str] = None
     info: Optional[str] = None
     image_url: Optional[str] = None
+    images: Optional[List[str]] = None
     category: str = Field(default="Other")
-    stock_status: str = Field(default="available")  # available | out_of_stock
+    stock_status: str = Field(default="available")
     is_featured: bool = False
     sort_order: int = 0
 
@@ -259,6 +260,7 @@ class ProductUpdate(BaseModel):
     panna: Optional[str] = None
     info: Optional[str] = None
     image_url: Optional[str] = None
+    images: Optional[List[str]] = None
     category: Optional[str] = None
     stock_status: Optional[str] = None
     is_featured: Optional[bool] = None
@@ -501,7 +503,10 @@ async def update_product(product_id: str, payload: ProductUpdate, current=Depend
     existing = await db.products.find_one({"id": product_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Product not found")
-    updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+  updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    # images empty list bhi allow karo
+    if 'images' in payload.model_dump(exclude_unset=True):
+        updates['images'] = payload.images or []
     if not updates:
         return clean_doc(existing)
     updates["updated_at"] = now_utc()
