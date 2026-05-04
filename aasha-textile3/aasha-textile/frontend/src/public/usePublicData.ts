@@ -86,15 +86,16 @@ export function useSettings() {
   return settings;
 }
 
-export function useProducts(params?: { category?: string; featured?: boolean; limit?: number }) {
+export function useProducts(params?: { category?: string; featured?: boolean; limit?: number; q?: string }) {
   const [items, setItems] = useState<Product[] | null>(null);
   useEffect(() => {
-    const q: any = {};
-    if (params?.category) q.category = params.category;
-    if (params?.featured !== undefined) q.featured = params.featured;
-    if (params?.limit) q.limit = params.limit;
-    api.get('/public/products', { params: q }).then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
-  }, [params?.category, params?.featured, params?.limit]);
+    const query: any = {};
+    if (params?.category) query.category = params.category;
+    if (params?.featured !== undefined) query.featured = params.featured;
+    if (params?.limit) query.limit = params.limit;
+    if (params?.q) query.q = params.q;
+    api.get('/public/products', { params: query }).then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
+  }, [params?.category, params?.featured, params?.limit, params?.q]);
   return items;
 }
 
