@@ -500,12 +500,12 @@ async def create_product(payload: ProductIn, current=Depends(get_current_admin))
 
 @api.patch("/products/{product_id}")
 async def update_product(product_id: str, payload: ProductUpdate, current=Depends(get_current_admin)):
-  existing = await db.products.find_one({"id": product_id})
+    existing = await db.products.find_one({"id": product_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Product not found")
-    updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
-    # images empty list bhi allow karo
-    if 'images' in payload.model_dump(exclude_unset=True):
+    dump = payload.model_dump(exclude_unset=True)
+    updates = {k: v for k, v in dump.items() if v is not None}
+    if 'images' in dump:
         updates['images'] = payload.images or []
     if not updates:
         return clean_doc(existing)
@@ -555,9 +555,9 @@ async def create_video(payload: VideoIn, current=Depends(get_current_admin)):
     return clean_doc(doc)
 
 
-@api.patch("/products/{product_id}")
-async def update_product(product_id: str, payload: ProductUpdate, current=Depends(get_current_admin)):
-    existing = await db.products.find_one({"id": product_id})
+@api.patch("/videos/{vid}")
+async def update_video(vid: str, payload: VideoUpdate, current=Depends(get_current_admin)):
+    existing = await db.videos.find_one({"id": vid})
     if not existing:
         raise HTTPException(status_code=404, detail="Video not found")
     updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
