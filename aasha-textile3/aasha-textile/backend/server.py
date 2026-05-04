@@ -555,9 +555,9 @@ async def create_video(payload: VideoIn, current=Depends(get_current_admin)):
     return clean_doc(doc)
 
 
-@api.patch("/videos/{vid}")
-async def update_video(vid: str, payload: VideoUpdate, current=Depends(get_current_admin)):
-    existing = await db.videos.find_one({"id": vid})
+@api.patch("/products/{product_id}")
+async def update_product(product_id: str, payload: ProductUpdate, current=Depends(get_current_admin)):
+    existing = await db.products.find_one({"id": product_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Video not found")
     updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
