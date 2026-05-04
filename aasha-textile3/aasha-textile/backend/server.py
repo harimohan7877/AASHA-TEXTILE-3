@@ -770,15 +770,23 @@ async def dashboard_stats(current=Depends(get_current_admin)):
 # ============================================================
 
 @api.get("/public/products")
-async def public_products(category: Optional[str] = None, featured: Optional[bool] = None, limit: int = 500):
+async def public_products(category: Optional[str] = None, featured: Optional[bool] = None, limit: int = 500, q: Optional[str] = None):
     query: Dict[str, Any] = {}
     if category:
         query["category"] = category
     if featured is not None:
         query["is_featured"] = featured
+    if q:
+        query["$or"] = [
+            {"name": {"$regex": q, "$options": "i"}},
+            {"name_en": {"$regex": q, "$options": "i"}},
+            {"variety": {"$regex": q, "$options": "i"}},
+            {"category": {"$regex": q, "$options": "i"}},
+        ]
+    if limit == 0:
+        return {"items": []}
     cursor = db.products.find(query).sort([("sort_order", -1), ("created_at", -1)]).limit(limit)
     return {"items": [clean_doc(d) for d in await cursor.to_list(length=limit)]}
-
 
 @api.get("/public/settings")
 async def public_settings():
