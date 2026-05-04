@@ -7,8 +7,7 @@ import { WhatsAppIcon } from './PublicHeader';
 import TestimonialsSection from './TestimonialsSection';
 import { useMemo, useState } from 'react';
 
-const DEFAULT_HERO = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=2000&q=70';
-
+const DEFAULT_HERO = '';
 export default function Home() {
   const settings = useSettings();
   const cats = useCategories();
