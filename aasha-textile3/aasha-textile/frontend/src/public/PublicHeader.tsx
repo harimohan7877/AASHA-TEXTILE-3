@@ -1,13 +1,14 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, Phone, Search } from 'lucide-react';
+import { Menu, X, Phone, Search, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useSettings, useCategories, whatsappLink } from './usePublicData';
+import { useSettings, useCategories, whatsappLink, useCart } from './usePublicData';
 import { resolveImage } from '../lib/api';
 
 export default function PublicHeader() {
   const settings = useSettings();
   const cats = useCategories();
   const [open, setOpen] = useState(false);
+  const { totalItems } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
 
@@ -68,6 +69,13 @@ export default function PublicHeader() {
         <Link to="/search" className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-500 hover:border-stone-400 transition mr-1">
           <Search size={14} /> Search...
         </Link>
+        {/* Cart icon */}
+        <Link to="/cart" className="relative hidden lg:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-stone-100 transition">
+          <ShoppingCart size={20} className="text-stone-700"/>
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-600 text-white text-[10px] font-bold rounded-full grid place-items-center">{totalItems}</span>
+          )}
+        </Link>
         <div className="hidden lg:flex items-center gap-3">
           <a href={`tel:${settings?.phone || ''}`} className="pub-btn-outline !py-2 !px-4 !text-sm">
             <Phone size={14}/> Call
@@ -95,6 +103,10 @@ export default function PublicHeader() {
             <div className="p-5 space-y-1">
               <Link to="/" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">Home</Link>
               <Link to="/search" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">🔍 Search</Link>
+              <Link to="/cart" onClick={() => setOpen(false)} className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">
+                <span>🛒 Cart</span>
+                {totalItems > 0 && <span className="bg-brand-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}
+              </Link>
               <Link to="/about" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">About</Link>
               <div className="px-3 py-2 text-xs font-semibold tracking-widest uppercase text-stone-500 mt-3">Shop by Category</div>
               {(cats || []).filter(c => (c.product_count || 0) > 0).map((c) => (
