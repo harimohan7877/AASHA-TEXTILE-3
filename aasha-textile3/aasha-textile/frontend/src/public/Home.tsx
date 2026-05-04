@@ -103,14 +103,27 @@ export default function Home() {
       {/* CATEGORIES */}
       <section id="collection" className="pub-section">
         <div className="pub-container">
-          <div className="flex items-end justify-between gap-6 flex-wrap mb-10">
+         <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
             <div>
               <span className="pub-eyebrow">Shop by Fabric</span>
               <h2 className="pub-heading mt-3">Our Collections</h2>
               <p className="mt-2 text-stone-600 max-w-lg">Hand-picked fabric categories — explore what fits your store.</p>
             </div>
           </div>
-
+          {/* Flipkart-style quick search */}
+          <form onSubmit={(e) => { e.preventDefault(); const v = (e.currentTarget.querySelector('input') as HTMLInputElement)?.value?.trim(); if(v) window.location.href=`/search?q=${encodeURIComponent(v)}`; }} className="mb-10">
+            <div className="relative max-w-xl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input
+                type="search"
+                placeholder="Search fabric, category, variety..."
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-stone-200 bg-white shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-stone-400"
+              />
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 bg-stone-900 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-stone-800 transition">
+                Search
+              </button>
+            </div>
+          </form>
           {!cats ? (
             <GridSkeleton aspect="aspect-[4/3]" count={6} />
           ) : visibleCats.length === 0 ? (
