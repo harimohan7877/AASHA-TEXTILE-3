@@ -14,6 +14,7 @@ import Home from './public/Home';
 import CategoryPage from './public/CategoryPage';
 import ProductDetail from './public/ProductDetail';
 import AboutPage from './public/AboutPage';
+import CartPage from './public/CartPage';
 import PolicyPage from './public/PolicyPage';
 import NotFoundPublic from './public/NotFoundPublic';
 import SearchPage from './public/SearchPage';
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/policies/:slug" element={<PolicyPage />} />
       </Route>
 
