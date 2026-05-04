@@ -10,12 +10,17 @@ import type { Product } from './usePublicData';
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const settings = useSettings();
-  const [p, setP] = useState<Product | null | undefined>(undefined);
+ const [p, setP] = useState<Product | null | undefined>(undefined);
+  const [activeImg, setActiveImg] = useState<string>('');
 
-  useEffect(() => {
+useEffect(() => {
     if (!id) return;
     setP(undefined);
-    api.get(`/products/${id}`).then(r => setP(r.data)).catch(() => setP(null));
+    setActiveImg('');
+    api.get(`/products/${id}`).then(r => {
+      setP(r.data);
+      setActiveImg(r.data?.image_url || '');
+    }).catch(() => setP(null));
   }, [id]);
 
   // ✅ NAYA — Tab title product ke naam se set hoga
@@ -47,15 +52,29 @@ export default function ProductDetail() {
 
       <section className="pb-16">
         <div className="pub-container grid md:grid-cols-2 gap-8 lg:gap-16 items-start">
-          {/* Image */}
-          <div className="relative rounded-3xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-soft aspect-square">
-            {p.image_url ? (
-              <img src={resolveImage(p.image_url)} alt={p.name} className="w-full h-full object-cover"/>
-            ) : <div className="w-full h-full grid place-items-center text-stone-300 font-display text-7xl">A</div>}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
-              {p.is_featured && <span className="inline-flex items-center gap-1 bg-stone-900 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full"><Star size={12} fill="currentColor"/> Bestseller</span>}
-              {out && <span className="inline-flex items-center bg-red-600/95 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full">Out of Stock</span>}
+         {/* Image Gallery */}
+          <div className="space-y-3">
+            {/* Main image */}
+            <div className="relative rounded-3xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-soft aspect-square">
+              {activeImg || p.image_url ? (
+                <img src={resolveImage(activeImg || p.image_url || '')} alt={p.name} className="w-full h-full object-cover"/>
+              ) : <div className="w-full h-full grid place-items-center text-stone-300 font-display text-7xl">A</div>}
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {p.is_featured && <span className="inline-flex items-center gap-1 bg-stone-900 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full"><Star size={12} fill="currentColor"/> Bestseller</span>}
+                {out && <span className="inline-flex items-center bg-red-600/95 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full">Out of Stock</span>}
+              </div>
             </div>
+            {/* Thumbnails — sirf tab dikhenge jab multiple images hon */}
+            {p.images && p.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {p.images.map((img, idx) => (
+                  <button key={idx} onClick={() => setActiveImg(img)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition ${activeImg === img ? 'border-brand-600' : 'border-transparent hover:border-stone-300'}`}>
+                    <img src={resolveImage(img)} alt={`view ${idx + 1}`} className="w-full h-full object-cover"/>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}
