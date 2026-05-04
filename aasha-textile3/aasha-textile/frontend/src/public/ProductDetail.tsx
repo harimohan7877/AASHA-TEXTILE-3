@@ -1,8 +1,8 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, Star, Phone, Award, ShieldCheck, Truck, RotateCcw, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Star, Phone, Award, ShieldCheck, Truck, RotateCcw, BadgeCheck, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api, resolveImage } from '../lib/api';
-import { useProducts, useSettings, whatsappLink, slugify } from './usePublicData';
+import { useProducts, useSettings, whatsappLink, slugify, useCart } from './usePublicData';
 import ProductCard from './ProductCard';
 import { WhatsAppIcon } from './PublicHeader';
 import type { Product } from './usePublicData';
@@ -10,7 +10,15 @@ import type { Product } from './usePublicData';
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const settings = useSettings();
- const [p, setP] = useState<Product | null | undefined>(undefined);
+const { addToCart, totalItems } = useCart();
+  const [added, setAdded] = useState(false);
+
+  function handleAddToCart() {
+    if (!p) return;
+    addToCart(p);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  }
   const [activeImg, setActiveImg] = useState<string>('');
 
 useEffect(() => {
@@ -103,7 +111,12 @@ useEffect(() => {
 
             {/* CTA */}
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href={whatsappLink(settings?.whatsapp, whatsappText)} target="_blank" rel="noreferrer" className="pub-btn-whatsapp !py-3.5 !px-6"><WhatsAppIcon className="w-5 h-5"/> WhatsApp Enquiry</a>
+<a href={whatsappLink(settings?.whatsapp, whatsappText)} target="_blank" rel="noreferrer" className="pub-btn-whatsapp !py-3.5 !px-6"><WhatsAppIcon className="w-5 h-5"/> WhatsApp Enquiry</a>
+              {!out && (
+                <button onClick={handleAddToCart} className={`pub-btn !py-3.5 !px-6 transition-all ${added ? '!bg-green-600 !text-white' : '!bg-stone-100 !text-stone-900 hover:!bg-stone-200'}`}>
+                  <ShoppingCart size={16}/> {added ? 'Cart mein add hua ✓' : 'Add to Cart'}
+                </button>
+              )}
               {settings?.phone && <a href={`tel:${settings.phone}`} className="pub-btn-outline !py-3.5 !px-6"><Phone size={16}/> Call Now</a>}
             </div>
 
