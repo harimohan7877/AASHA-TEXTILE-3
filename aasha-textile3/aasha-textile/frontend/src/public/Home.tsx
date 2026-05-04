@@ -36,8 +36,7 @@ export default function Home() {
       <section className="relative min-h-[88vh] sm:min-h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
           <img src={heroImg} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-stone-900/80 via-stone-900/65 to-stone-900/40"/>
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-cream-50"/>
+<div className="absolute inset-0 bg-gradient-to-br from-stone-900/85 via-stone-900/75 to-stone-900/50"/>          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-cream-50"/>
         </div>
         <div className="relative pub-container pt-28 pb-20 text-white w-full">
           <div className="max-w-3xl">
