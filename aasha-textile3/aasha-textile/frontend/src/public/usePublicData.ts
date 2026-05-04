@@ -134,3 +134,52 @@ export function whatsappLink(number: string | undefined, message?: string) {
 export function slugify(s: string): string {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'category';
 }
+// ============================================================
+// CART — localStorage based
+// ============================================================
+
+export type CartItem = {
+  id: string;
+  name: string;
+  name_en?: string;
+  image_url?: string;
+  rate?: string;
+  category: string;
+  qty: number;
+};
+
+export function useCart() {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem('aasha_cart') || '[]'); }
+    catch { return []; }
+  });
+
+  function save(next: CartItem[]) {
+    setItems(next);
+    localStorage.setItem('aasha_cart', JSON.stringify(next));
+  }
+
+  function addToCart(p: Product, qty = 1) {
+    const existing = items.find(i => i.id === p.id);
+    if (existing) {
+      save(items.map(i => i.id === p.id ? { ...i, qty: i.qty + qty } : i));
+    } else {
+      save([...items, { id: p.id, name: p.name, name_en: p.name_en, image_url: p.image_url, rate: p.rate, category: p.category, qty }]);
+    }
+  }
+
+  function removeFromCart(id: string) {
+    save(items.filter(i => i.id !== id));
+  }
+
+  function updateQty(id: string, qty: number) {
+    if (qty <= 0) removeFromCart(id);
+    else save(items.map(i => i.id === id ? { ...i, qty } : i));
+  }
+
+  function clearCart() { save([]); }
+
+  const totalItems = items.reduce((s, i) => s + i.qty, 0);
+
+  return { items, addToCart, removeFromCart, updateQty, clearCart, totalItems };
+}
