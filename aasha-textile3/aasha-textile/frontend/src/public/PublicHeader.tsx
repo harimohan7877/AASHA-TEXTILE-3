@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X, Phone, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSettings, useCategories, whatsappLink } from './usePublicData';
 import { resolveImage } from '../lib/api';
@@ -64,6 +64,10 @@ export default function PublicHeader() {
         </nav>
 
         {/* Desktop CTA */}
+        {/* Search */}
+        <Link to="/search" className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-500 hover:border-stone-400 transition mr-1">
+          <Search size={14} /> Search...
+        </Link>
         <div className="hidden lg:flex items-center gap-3">
           <a href={`tel:${settings?.phone || ''}`} className="pub-btn-outline !py-2 !px-4 !text-sm">
             <Phone size={14}/> Call
@@ -90,6 +94,7 @@ export default function PublicHeader() {
             </div>
             <div className="p-5 space-y-1">
               <Link to="/" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">Home</Link>
+              <Link to="/search" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">🔍 Search</Link>
               <Link to="/about" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">About</Link>
               <div className="px-3 py-2 text-xs font-semibold tracking-widest uppercase text-stone-500 mt-3">Shop by Category</div>
               {(cats || []).filter(c => (c.product_count || 0) > 0).map((c) => (
