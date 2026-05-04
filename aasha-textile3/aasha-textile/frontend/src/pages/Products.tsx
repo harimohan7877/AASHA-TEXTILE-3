@@ -5,12 +5,12 @@ import toast from 'react-hot-toast';
 
 type Product = {
   id: string; name: string; name_en?: string; variety?: string; rate?: string; cut?: string; panna?: string;
-  info?: string; image_url?: string; category: string; stock_status: string; is_featured: boolean; sort_order: number;
+  info?: string; image_url?: string; images?: string[]; category: string; stock_status: string; is_featured: boolean; sort_order: number;
 };
 
 const EMPTY: Partial<Product> = {
   name: '', name_en: '', variety: '', rate: '', cut: '', panna: '', info: '',
-  image_url: '', category: 'Other', stock_status: 'available', is_featured: false, sort_order: 0,
+  image_url: '', images: [], category: 'Other', stock_status: 'available', is_featured: false, sort_order: 0,
 };
 
 export default function Products() {
@@ -122,7 +122,9 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form };
+    const payload = { ...form };
+      // images array se image_url set karo
+      if (payload.images && payload.images.length > 0) payload.image_url = payload.images[0];
       if (payload.sort_order === '' || payload.sort_order === null) payload.sort_order = 0;
       else payload.sort_order = parseInt(payload.sort_order);
       if (isEdit) {
@@ -140,18 +142,32 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
     }
   }
 
-  async function upload(file: File) {
+ async function upload(file: File) {
     setUploading(true);
     try {
       const fd = new FormData(); fd.append('file', file);
       const { data } = await api.post('/images/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setForm({ ...form, image_url: data.url });
+      const currentImages = form.images || (form.image_url ? [form.image_url] : []);
+      const newImages = [...currentImages, data.url];
+      setForm({ ...form, images: newImages, image_url: newImages[0] });
       toast.success('Image uploaded');
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Upload failed');
     } finally {
       setUploading(false);
     }
+  }
+
+  function addImageUrl(url: string) {
+    if (!url.trim()) return;
+    const currentImages = form.images || (form.image_url ? [form.image_url] : []);
+    const newImages = [...currentImages, url.trim()];
+    setForm({ ...form, images: newImages, image_url: newImages[0] });
+  }
+
+  function removeImage(idx: number) {
+    const newImages = (form.images || []).filter((_: any, i: number) => i !== idx);
+    setForm({ ...form, images: newImages, image_url: newImages[0] || '' });
   }
 
   return (
@@ -164,22 +180,35 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
         </div>
         <form onSubmit={submit} className="p-6 grid md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
-            <label className="label">Image</label>
-            <div className="flex items-start gap-4">
-              <div className="w-32 h-32 rounded-lg bg-slate-100 overflow-hidden grid place-items-center">
-                {form.image_url ? (
-                  <img src={resolveImage(form.image_url)} className="w-full h-full object-cover" alt=""/>
-                ) : <ImageIcon size={28} className="text-slate-300"/>}
-              </div>
-              <div className="flex-1 space-y-2">
-                <label className="btn-secondary cursor-pointer">
-                  {uploading ? <Loader2 className="animate-spin" size={14}/> : <Upload size={14}/>} Upload Image
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
-                </label>
-                <input className="input" placeholder="Or paste image URL..." value={form.image_url || ''} onChange={(e) => setForm({ ...form, image_url: e.target.value })}/>
-                <p className="text-xs text-slate-500">Auto-resized to 1600px, JPEG-optimized. Max 10 MB.</p>
-              </div>
+            <label className="label">Images (Multiple — pehli = main image)</label>
+            {/* Image thumbnails */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {(form.images && form.images.length > 0 ? form.images : form.image_url ? [form.image_url] : []).map((img: string, idx: number) => (
+                <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border-2 border-slate-200 group">
+                  <img src={resolveImage(img)} alt="" className="w-full h-full object-cover"/>
+                  {idx === 0 && <span className="absolute top-0 left-0 bg-brand-600 text-white text-[9px] px-1 py-0.5 font-bold">MAIN</span>}
+                  <button type="button" onClick={() => removeImage(idx)}
+                    className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition text-xs font-bold">
+                    ✕ Remove
+                  </button>
+                </div>
+              ))}
+              {/* Upload button */}
+              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 grid place-items-center cursor-pointer hover:border-brand-400 transition bg-slate-50">
+                {uploading ? <Loader2 className="animate-spin text-brand-600" size={18}/> : <Upload size={18} className="text-slate-400"/>}
+                <span className="text-[10px] text-slate-400 mt-1">Upload</span>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}/>
+              </label>
             </div>
+            {/* URL input */}
+            <div className="flex gap-2">
+              <input className="input flex-1" placeholder="Ya ImgBB URL paste karo..." id="img-url-input"/>
+              <button type="button" className="btn-secondary" onClick={() => {
+                const inp = document.getElementById('img-url-input') as HTMLInputElement;
+                if (inp?.value) { addImageUrl(inp.value); inp.value = ''; }
+              }}>Add URL</button>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Pehli image = main display. Hover karo remove karne ke liye.</p>
           </div>
           <div>
             <label className="label">Name (Hindi / Display)</label>
