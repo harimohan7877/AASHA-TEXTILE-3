@@ -11,6 +11,7 @@ export type Product = {
   panna?: string;
   info?: string;
   image_url?: string;
+  images?: string[];
   category: string;
   stock_status: string;
   is_featured: boolean;
