@@ -10,7 +10,9 @@ import type { Product } from './usePublicData';
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const settings = useSettings();
-const { addToCart, totalItems } = useCart();
+const [p, setP] = useState<Product | null | undefined>(undefined);
+  const [activeImg, setActiveImg] = useState<string>('');
+  const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
 
   function handleAddToCart() {
@@ -19,7 +21,6 @@ const { addToCart, totalItems } = useCart();
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
-  const [activeImg, setActiveImg] = useState<string>('');
 
 useEffect(() => {
     if (!id) return;
