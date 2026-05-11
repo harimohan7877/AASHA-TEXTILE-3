@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 export default function CartPage() {
   const { items, removeFromCart, updateQty, clearCart, totalItems } = useCart();
-  const settings = useSettings();
+  const { data: settings } = useSettings();
 
   useEffect(() => { document.title = `Cart (${totalItems}) — Aasha Textile`; }, [totalItems]);
 

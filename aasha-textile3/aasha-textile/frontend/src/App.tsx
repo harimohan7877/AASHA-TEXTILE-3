@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Login from './pages/Login';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -19,8 +20,19 @@ import PolicyPage from './public/PolicyPage';
 import NotFoundPublic from './public/NotFoundPublic';
 import SearchPage from './public/SearchPage';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      retry: 1,
+    },
+  },
+});
+
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <Routes>
       {/* ========== PUBLIC SITE ========== */}
       <Route element={<PublicLayout />}>
@@ -54,5 +66,6 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPublic />} />
     </Routes>
+  </QueryClientProvider>
   );
 }

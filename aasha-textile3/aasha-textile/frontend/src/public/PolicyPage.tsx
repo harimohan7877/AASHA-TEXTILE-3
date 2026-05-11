@@ -29,7 +29,7 @@ const META: Record<string, { title: string; field: string; icon: any; eyebrow: s
 
 export default function PolicyPage() {
   const { slug } = useParams<{ slug: string }>();
-  const settings = useSettings();
+  const { data: settings } = useSettings();
   const meta = slug ? META[slug] : undefined;
 
   if (!meta) return <Navigate to="/" replace />;

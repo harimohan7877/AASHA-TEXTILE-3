@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 
 export type Product = {
@@ -59,7 +60,6 @@ export type SiteSettings = {
   logo_url?: string;
   hero_image_url?: string;
   about?: string;
-  // Trust signals
   gst_number?: string;
   udyam_number?: string;
   established_year?: string;
@@ -67,61 +67,57 @@ export type SiteSettings = {
   business_hours?: string;
   happy_customers?: string;
   years_of_trust?: string;
-  // Social
   instagram_url?: string;
   facebook_url?: string;
   youtube_url?: string;
   google_maps_url?: string;
-  // Policies (full text shown on policy pages)
   payment_methods?: string;
   shipping_info?: string;
   return_policy?: string;
   privacy_policy?: string;
 };
 
+// ✅ React Query hooks with caching
 export function useSettings() {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  useEffect(() => {
-    api.get('/public/settings').then((r) => setSettings(r.data || {})).catch(() => setSettings({}));
-  }, []);
-  return settings;
+  return useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api.get('/public/settings').then(r => r.data || {}),
+  });
 }
 
 export function useProducts(params?: { category?: string; featured?: boolean; limit?: number; q?: string }) {
-  const [items, setItems] = useState<Product[] | null>(null);
-  useEffect(() => {
-    const query: any = {};
-    if (params?.category) query.category = params.category;
-    if (params?.featured !== undefined) query.featured = params.featured;
-    if (params?.limit) query.limit = params.limit;
-    if (params?.q) query.q = params.q;
-    api.get('/public/products', { params: query }).then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
-  }, [params?.category, params?.featured, params?.limit, params?.q]);
-  return items;
+  return useQuery({
+    queryKey: ['products', params],
+    queryFn: () => {
+      const query: Record<string, string | number> = {};
+      if (params?.category) query.category = params.category;
+      if (params?.featured !== undefined) query.featured = String(params.featured);
+      if (params?.limit) query.limit = params.limit;
+      if (params?.q) query.q = params.q;
+      return api.get('/public/products', { params: query }).then(r => r.data.items || []);
+    },
+  });
 }
 
 export function useCategories() {
-  const [items, setItems] = useState<Category[] | null>(null);
-  useEffect(() => {
-    api.get('/categories').then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
-  }, []);
-  return items;
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.get('/categories').then(r => r.data.items || []),
+  });
 }
 
 export function useVideos() {
-  const [items, setItems] = useState<Video[] | null>(null);
-  useEffect(() => {
-    api.get('/videos').then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
-  }, []);
-  return items;
+  return useQuery({
+    queryKey: ['videos'],
+    queryFn: () => api.get('/videos').then(r => r.data.items || []),
+  });
 }
 
 export function useTestimonials() {
-  const [items, setItems] = useState<Testimonial[] | null>(null);
-  useEffect(() => {
-    api.get('/testimonials').then((r) => setItems(r.data.items || [])).catch(() => setItems([]));
-  }, []);
-  return items;
+  return useQuery({
+    queryKey: ['testimonials'],
+    queryFn: () => api.get('/testimonials').then(r => r.data.items || []),
+  });
 }
 
 export function whatsappLink(number: string | undefined, message?: string) {
@@ -134,8 +130,9 @@ export function whatsappLink(number: string | undefined, message?: string) {
 export function slugify(s: string): string {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'category';
 }
+
 // ============================================================
-// CART — localStorage based
+// CART — localStorage based (no backend sync)
 // ============================================================
 
 export type CartItem = {

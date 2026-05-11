@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { resolveImage } from '../lib/api';
 import type { Product } from './usePublicData';
+import LazyImage from '../components/LazyImage';
 
 export default function ProductCard({ p }: { p: Product }) {
   const out = p.stock_status === 'out_of_stock';
@@ -9,7 +10,7 @@ export default function ProductCard({ p }: { p: Product }) {
     <Link to={`/product/${p.id}`} className="group block">
       <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-sm group-hover:shadow-soft transition-shadow">
         {p.image_url ? (
-          <img src={resolveImage(p.image_url)} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
+          <LazyImage src={resolveImage(p.image_url)} alt={p.name} className="group-hover:scale-[1.04] transition-transform duration-500" />
         ) : (
           <div className="w-full h-full grid place-items-center text-stone-300 font-display text-3xl">A</div>
         )}

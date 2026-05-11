@@ -453,6 +453,8 @@ async def list_products(
     is_featured: Optional[bool] = None,
     sort: Optional[str] = "sort_order",
     limit: int = Query(500, le=1000),
+    page: int = 1,
+    per_page: int = 20,
 ):
     query: Dict[str, Any] = {}
     if q:
@@ -475,9 +477,14 @@ async def list_products(
     elif sort == "name":
         sort_spec = [("name", 1)]
 
-    cursor = db.products.find(query).sort(sort_spec).limit(limit)
-    items = [clean_doc(d) for d in await cursor.to_list(length=limit)]
-    return {"items": items, "count": len(items)}
+    # Pagination
+    skip = (page - 1) * per_page
+    total = await db.products.count_documents(query)
+    pages = (total + per_page - 1) // per_page
+
+    cursor = db.products.find(query).sort(sort_spec).skip(skip).limit(per_page)
+    items = [clean_doc(d) for d in await cursor.to_list(length=per_page)]
+    return {"items": items, "count": len(items), "pagination": {"page": page, "per_page": per_page, "total": total, "pages": pages}}
 
 
 @api.get("/products/{product_id}")
@@ -775,7 +782,14 @@ async def dashboard_stats(current=Depends(get_current_admin)):
 # ============================================================
 
 @api.get("/public/products")
-async def public_products(category: Optional[str] = None, featured: Optional[bool] = None, limit: int = 500, q: Optional[str] = None):
+async def public_products(
+    category: Optional[str] = None,
+    featured: Optional[bool] = None,
+    limit: int = 500,
+    q: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 20
+):
     query: Dict[str, Any] = {}
     if category:
         query["category"] = category
@@ -789,9 +803,20 @@ async def public_products(category: Optional[str] = None, featured: Optional[boo
             {"category": {"$regex": q, "$options": "i"}},
         ]
     if limit == 0:
-        return {"items": []}
-    cursor = db.products.find(query).sort([("sort_order", -1), ("created_at", -1)]).limit(limit)
-    return {"items": [clean_doc(d) for d in await cursor.to_list(length=limit)]}
+        return {"items": [], "pagination": {"page": 1, "per_page": 20, "total": 0, "pages": 0}}
+
+    # Pagination support
+    skip = (page - 1) * per_page
+    total = await db.products.count_documents(query)
+    pages = (total + per_page - 1) // per_page
+
+    cursor = db.products.find(query).sort([("sort_order", -1), ("created_at", -1)]).skip(skip).limit(per_page)
+    items = [clean_doc(d) for d in await cursor.to_list(length=per_page)]
+
+    return {
+        "items": items,
+        "pagination": {"page": page, "per_page": per_page, "total": total, "pages": pages}
+    }
 
 @api.get("/public/settings")
 async def public_settings():

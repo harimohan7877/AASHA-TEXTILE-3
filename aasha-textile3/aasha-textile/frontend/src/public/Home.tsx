@@ -9,15 +9,14 @@ import { useMemo, useState } from 'react';
 
 const DEFAULT_HERO = '';
 export default function Home() {
-  const settings = useSettings();
-  const cats = useCategories();
-  const featured = useProducts({ featured: true, limit: 8 });
-  const all = useProducts({ limit: 500 });
-  const videos = useVideos();
+  const { data: settings } = useSettings();
+  const { data: cats } = useCategories();
+  const { data: featured } = useProducts({ featured: true, limit: 8 });
+  const { data: all } = useProducts({ limit: 500 });
+  const { data: videos } = useVideos();
 
   const visibleCats = useMemo(() => (cats || []).filter(c => (c.product_count || 0) > 0), [cats]);
 
-  // Auto-build a first-image fallback per category from products
   const catImage = useMemo(() => {
     const m: Record<string, string | undefined> = {};
     (all || []).forEach(p => {

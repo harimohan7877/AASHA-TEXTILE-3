@@ -4,7 +4,7 @@ import { useTestimonials } from './usePublicData';
 import { resolveImage } from '../lib/api';
 
 export default function TestimonialsSection() {
-  const items = useTestimonials();
+  const { data: items } = useTestimonials();
   const [active, setActive] = useState(0);
 
   useEffect(() => {

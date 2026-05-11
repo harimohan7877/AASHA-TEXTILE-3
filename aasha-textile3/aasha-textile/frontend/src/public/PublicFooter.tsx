@@ -4,8 +4,8 @@ import { useSettings, useCategories, whatsappLink, slugify } from './usePublicDa
 import { WhatsAppIcon } from './PublicHeader';
 
 export default function PublicFooter() {
-  const settings = useSettings();
-  const cats = useCategories();
+  const { data: settings } = useSettings();
+  const { data: cats } = useCategories();
   const year = new Date().getFullYear();
 
   const socials = [

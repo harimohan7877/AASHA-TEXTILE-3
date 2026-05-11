@@ -8,7 +8,7 @@ import TestimonialsSection from './TestimonialsSection';
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=2000&q=70';
 
 export default function AboutPage() {
-  const s = useSettings();
+  const { data: s } = useSettings();
   const hero = s?.hero_image_url ? resolveImage(s.hero_image_url) : DEFAULT_HERO;
 
   const credentials = [

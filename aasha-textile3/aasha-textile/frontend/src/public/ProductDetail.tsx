@@ -9,7 +9,7 @@ import type { Product } from './usePublicData';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const settings = useSettings();
+  const { data: settings } = useSettings();
 const [p, setP] = useState<Product | null | undefined>(undefined);
   const [activeImg, setActiveImg] = useState<string>('');
   const { addToCart } = useCart();
@@ -37,7 +37,56 @@ useEffect(() => {
     if (p?.name) document.title = `${p.name_en || p.name} — Aasha Textile`;
   }, [p]);
 
-  const related = useProducts(p ? { category: p.category, limit: 8 } : { limit: 0 });
+  // ✅ JSON-LD Structured Data for SEO
+  useEffect(() => {
+    if (!p) return;
+    const productJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": p.name,
+      "description": p.info || `${p.name} — premium wholesale fabric from Aasha Textile`,
+      "image": p.image_url ? [resolveImage(p.image_url)] : [],
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "INR",
+        "availability": p.stock_status === 'out_of_stock'
+          ? "https://schema.org/OutOfStock"
+          : "https://schema.org/InStock",
+      },
+      "brand": { "@type": "Brand", "name": "Aasha Textile" },
+      "category": p.category,
+    };
+    const existing = document.getElementById('product-jsonld');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id = 'product-jsonld';
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(productJsonLd);
+    document.head.appendChild(script);
+    return () => { document.getElementById('product-jsonld')?.remove(); };
+  }, [p]);
+
+  // ✅ Dynamic Open Graph tags for social sharing
+  useEffect(() => {
+    if (!p) return;
+    const imgUrl = p.image_url ? resolveImage(p.image_url) : '';
+    const setMeta = (prop: string, content: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`) as HTMLMetaElement;
+      if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    setMeta('og:title', `${p.name}${p.name_en ? ` (${p.name_en})` : ''} — Aasha Textile`);
+    setMeta('og:description', p.info || `${p.name} — premium wholesale fabric from Aasha Textile`);
+    if (imgUrl) setMeta('og:image', imgUrl);
+    setMeta('og:url', `https://aashatextile.com/product/${p.id}`);
+    return () => {
+      // Reset to home page OG on unmount
+      const el = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
+      if (el) el.setAttribute('content', 'Aasha Textile — Premium Wholesale Fabric');
+    };
+  }, [p]);
+
+  const { data: related } = useProducts(p ? { category: p.category, limit: 8 } : { limit: 0 });
 
   if (p === null) return <Navigate to="/" replace />;
   if (p === undefined) return <div className="pt-40 pb-20 pub-container"><div className="h-96 rounded-3xl bg-cream-100 animate-pulse"/></div>;

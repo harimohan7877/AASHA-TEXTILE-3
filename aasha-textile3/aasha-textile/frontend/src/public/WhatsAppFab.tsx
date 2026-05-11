@@ -2,7 +2,7 @@ import { useSettings, whatsappLink } from './usePublicData';
 import { WhatsAppIcon } from './PublicHeader';
 
 export default function WhatsAppFab() {
-  const settings = useSettings();
+  const { data: settings } = useSettings();
   if (!settings?.whatsapp) return null;
   return (
     <a

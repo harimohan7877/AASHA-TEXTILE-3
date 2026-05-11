@@ -7,7 +7,7 @@ import { useMemo, useState, useEffect } from 'react';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
-  const cats = useCategories();
+  const { data: cats } = useCategories();
   const decodedSlug = decodeURIComponent(slug || '');
 
   const current = useMemo(() => {
@@ -21,7 +21,7 @@ export default function CategoryPage() {
     if (current?.name) document.title = `${current.name} — Aasha Textile`;
   }, [current]);
 
-  const products = useProducts(current ? { category: current.name, limit: 500 } : { limit: 0 });
+  const { data: products } = useProducts(current ? { category: current.name, limit: 500 } : { limit: 0 });
 
   const [sort, setSort] = useState<'default' | 'price_asc' | 'price_desc' | 'name'>('default');
   const [featuredOnly, setFeaturedOnly] = useState(false);

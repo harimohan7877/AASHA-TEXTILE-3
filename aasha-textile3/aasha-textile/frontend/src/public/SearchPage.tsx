@@ -8,8 +8,8 @@ export default function SearchPage() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
   const [input, setInput] = useState(q);
-  const products = useProducts(q.trim().length >= 1 ? { q: q.trim(), limit: 100 } : undefined);
-  const cats = useCategories();
+  const { data: products } = useProducts(q.trim().length >= 1 ? { q: q.trim(), limit: 100 } : undefined);
+  const { data: cats } = useCategories();
 
   useEffect(() => {
     document.title = q ? `"${q}" — Aasha Textile` : 'Search — Aasha Textile';

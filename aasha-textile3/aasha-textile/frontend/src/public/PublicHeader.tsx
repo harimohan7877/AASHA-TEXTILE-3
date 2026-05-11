@@ -5,8 +5,8 @@ import { useSettings, useCategories, whatsappLink, useCart } from './usePublicDa
 import { resolveImage } from '../lib/api';
 
 export default function PublicHeader() {
-  const settings = useSettings();
-  const cats = useCategories();
+  const { data: settings } = useSettings();
+  const { data: cats } = useCategories();
   const [open, setOpen] = useState(false);
   const { totalItems } = useCart();
   const [scrolled, setScrolled] = useState(false);
