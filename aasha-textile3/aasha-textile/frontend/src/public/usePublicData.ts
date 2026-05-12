@@ -77,6 +77,19 @@ export type SiteSettings = {
   privacy_policy?: string;
 };
 
+// GA4 Analytics helper
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
+export function trackEvent(eventName: string, params?: Record<string, any>) {
+  if (typeof window.gtag !== 'undefined') {
+    window.gtag('event', eventName, params);
+  }
+}
+
 // ✅ React Query hooks with caching
 export function useSettings() {
   return useQuery({

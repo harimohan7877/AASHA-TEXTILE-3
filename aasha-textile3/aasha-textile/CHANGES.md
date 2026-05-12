@@ -173,8 +173,18 @@ Yeh file har change ko track karega — ki kya se kya change kiya gaya.
 
 ### 15. ✅ Google Analytics (GA4) Integration
 - **File**: `frontend/index.html`
-- **Change**: Added GA4 script placeholder
-- **Setup Required**: Replace `YOUR_GA4_MEASUREMENT_ID` with your actual GA4 Measurement ID
+- **Change**: Added GA4 tracking script with your Measurement ID `G-L859X3524E`
+
+**Events Tracking:**
+- `whatsapp_click` - When users click WhatsApp FAB
+- `add_to_cart` - When products added to cart
+- `begin_checkout` - When cart page opened
+- `search` - When users search (with query + results count)
+
+**How to View Analytics:**
+1. https://analytics.google.com
+2. Reports → Real-time → See active users
+3. Engagement → Events → All events
 
 **How to get your GA4 ID:**
 1. Go to https://analytics.google.com

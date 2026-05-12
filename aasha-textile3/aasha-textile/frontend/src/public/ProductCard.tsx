@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import { Star, Heart, ShoppingCart, Eye } from 'lucide-react';
 import { resolveImage } from '../lib/api';
 import type { Product } from './usePublicData';
+import { useCart, trackEvent } from './usePublicData';
 import LazyImage from '../components/LazyImage';
-import { useCart } from './usePublicData';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,11 @@ export default function ProductCard({ p }: { p: Product }) {
     if (out) return;
     addToCart(p);
     toast.success(`${p.name} cart mein add ho gaya!`);
+    trackEvent('add_to_cart', {
+      currency: 'INR',
+      value: p.rate || '0',
+      items: [{ item_id: p.id, item_name: p.name, item_category: p.category, quantity: 1 }]
+    });
   }
 
   return (

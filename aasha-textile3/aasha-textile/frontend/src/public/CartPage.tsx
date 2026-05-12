@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { useCart, useSettings, whatsappLink } from './usePublicData';
+import { useCart, useSettings, whatsappLink, trackEvent } from './usePublicData';
 import { resolveImage } from '../lib/api';
 import { WhatsAppIcon } from './PublicHeader';
 import { useEffect } from 'react';
@@ -13,6 +13,11 @@ export default function CartPage() {
 
   const whatsappOrder = () => {
     if (items.length === 0) return '#';
+    trackEvent('begin_checkout', {
+      currency: 'INR',
+      value: '0',
+      items: items.map(i => ({ item_id: i.id, item_name: i.name, item_category: i.category, quantity: i.qty }))
+    });
     const lines = items.map(i => `• ${i.name}${i.name_en ? ` (${i.name_en})` : ''} × ${i.qty}${i.rate ? ` — ${i.rate}` : ''}`).join('\n');
     const msg = `Hi, main yeh order karna chahta/chahti hoon:\n\n${lines}\n\nKya yeh available hai? Please confirm karein.`;
     return whatsappLink(settings?.whatsapp, msg);

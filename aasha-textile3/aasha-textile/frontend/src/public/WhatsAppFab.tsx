@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSettings, whatsappLink } from './usePublicData';
 import { WhatsAppIcon } from './PublicHeader';
-import { MessageCircle, X } from 'lucide-react';
+
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
 
 export default function WhatsAppFab() {
   const { data: settings } = useSettings();
@@ -9,6 +14,15 @@ export default function WhatsAppFab() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  function trackClick() {
+    if (typeof window.gtag !== 'undefined') {
+      window.gtag('event', 'whatsapp_click', {
+        event_category: 'engagement',
+        event_label: 'WhatsApp FAB',
+      });
+    }
+  }
 
   if (!settings?.whatsapp) return null;
 
@@ -26,6 +40,7 @@ export default function WhatsAppFab() {
         target="_blank"
         rel="noreferrer"
         aria-label="Chat on WhatsApp"
+        onClick={trackClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/40 hover:scale-110 transition-all duration-300"

@@ -1,6 +1,6 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search, ArrowLeft } from 'lucide-react';
-import { useProducts, useCategories, slugify } from './usePublicData';
+import { useProducts, useCategories, slugify, trackEvent } from './usePublicData';
 import ProductCard from './ProductCard';
 import { useState, useEffect } from 'react';
 
@@ -13,11 +13,17 @@ export default function SearchPage() {
 
   useEffect(() => {
     document.title = q ? `"${q}" — Aasha Textile` : 'Search — Aasha Textile';
-  }, [q]);
+    if (q) {
+      trackEvent('search', { search_term: q, results_count: products?.length || 0 });
+    }
+  }, [q, products]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (input.trim()) setParams({ q: input.trim() });
+    if (input.trim()) {
+      trackEvent('search', { search_term: input.trim() });
+      setParams({ q: input.trim() });
+    }
   }
 
   const matchedCats = (cats || []).filter(c =>
