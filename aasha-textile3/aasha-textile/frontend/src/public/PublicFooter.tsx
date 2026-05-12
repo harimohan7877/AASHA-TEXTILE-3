@@ -118,6 +118,8 @@ export default function PublicFooter() {
             <li><Link to="/policies/shipping" className="hover:text-white">Shipping Info</Link></li>
             <li><Link to="/policies/returns" className="hover:text-white">Return Policy</Link></li>
             <li><Link to="/policies/privacy" className="hover:text-white">Privacy Policy</Link></li>
+            <li><Link to="/faq" className="hover:text-white">FAQ</Link></li>
+            <li><Link to="/contact" className="hover:text-white">Contact Us</Link></li>
           </ul>
         </div>
       </div>

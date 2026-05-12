@@ -8,6 +8,7 @@ import TestimonialsSection from './TestimonialsSection';
 import { useMemo, useState, useEffect } from 'react';
 
 const DEFAULT_HERO = '';
+const INITIAL_CATS = 3;
 export default function Home() {
   const { data: settings } = useSettings();
   const { data: cats } = useCategories();
@@ -28,6 +29,7 @@ export default function Home() {
   const heroImg = settings?.hero_image_url ? resolveImage(settings.hero_image_url) : DEFAULT_HERO;
   const storeName = settings?.store_name || 'Aasha Textile';
   const tagline = settings?.tagline || 'Quality Fabric, Wholesale Price';
+  const [showAllCats, setShowAllCats] = useState(false);
 
   // ✅ JSON-LD Structured Data for Homepage SEO
   useEffect(() => {
@@ -181,8 +183,9 @@ export default function Home() {
           ) : visibleCats.length === 0 ? (
             <div className="py-14 text-center text-stone-500">Collections coming soon.</div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              {visibleCats.map((c) => {
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                {(showAllCats ? visibleCats : visibleCats.slice(0, INITIAL_CATS)).map((c) => {
                 const img = c.image_url ? resolveImage(c.image_url) : (catImage[c.name] ? resolveImage(catImage[c.name]!) : '');
                 return (
                   <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`}
@@ -201,9 +204,24 @@ export default function Home() {
                       </div>
                     </div>
                   </Link>
-                );
-              })}
-            </div>
+                })}
+              </div>
+              {/* See All Button */}
+              {visibleCats.length > INITIAL_CATS && !showAllCats && (
+                <div className="mt-8 text-center">
+                  <button onClick={() => setShowAllCats(true)} className="pub-btn-outline !py-3 !px-8">
+                    See All Categories ({visibleCats.length}) <ArrowRight size={16}/>
+                  </button>
+                </div>
+              )}
+              {visibleCats.length > INITIAL_CATS && showAllCats && (
+                <div className="mt-8 text-center">
+                  <button onClick={() => setShowAllCats(false)} className="pub-btn-outline !py-3 !px-8">
+                    Show Less <ArrowRight size={16} className="rotate-180"/>
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

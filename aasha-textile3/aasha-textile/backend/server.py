@@ -928,6 +928,53 @@ async def health():
 
 
 # ============================================================
+# SEO: Sitemap + Robots
+# ============================================================
+
+@api.get("/sitemap.xml", include_in_schema=False)
+async def sitemap():
+    """Dynamic sitemap.xml for SEO."""
+    base = "https://aashatextile.com"
+    # Get all categories
+    cats = await db.categories.find({}).to_list(length=100)
+    # Get all products (limit to 1000 for sitemap)
+    products = await db.products.find({}).limit(1000).to_list(length=1000)
+
+    urls = [
+        {"loc": f"{base}/", "changefreq": "daily", "priority": "1.0"},
+        {"loc": f"{base}/about", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base}/faq", "changefreq": "weekly", "priority": "0.7"},
+        {"loc": f"{base}/contact", "changefreq": "weekly", "priority": "0.7"},
+        {"loc": f"{base}/cart", "changefreq": "daily", "priority": "0.6"},
+        {"loc": f"{base}/search", "changefreq": "daily", "priority": "0.6"},
+        {"loc": f"{base}/policies/shipping", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": f"{base}/policies/returns", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": f"{base}/policies/privacy", "changefreq": "monthly", "priority": "0.5"},
+    ]
+    # Add categories
+    for c in cats:
+        urls.append({"loc": f"{base}/category/{c.get('slug', c.get('name', '').lower().replace(' ', '-'))}", "changefreq": "weekly", "priority": "0.8"})
+    # Add products
+    for p in products:
+        urls.append({"loc": f"{base}/product/{p.get('id')}", "changefreq": "weekly", "priority": "0.7"})
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for u in urls:
+        xml += f'  <url>\n    <loc>{u["loc"]}</loc>\n    <changefreq>{u["changefreq"]}</changefreq>\n    <priority>{u["priority"]}</priority>\n  </url>\n'
+    xml += '</urlset>'
+    return Response(content=xml, media_type="application/xml")
+
+
+@api.get("/robots.txt", include_in_schema=False)
+async def robots():
+    """Robots.txt for SEO."""
+    return Response(
+        content="User-agent: *\nAllow: /\n\nSitemap: https://aashatextile.com/api/sitemap.xml",
+        media_type="text/plain"
+    )
+
+
+# ============================================================
 # Register + CORS
 # ============================================================
 app.include_router(api)

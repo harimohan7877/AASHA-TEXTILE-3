@@ -138,6 +138,37 @@ Yeh file har change ko track karega — ki kya se kya change kiya gaya.
 
 ---
 
+## 2026-05-12 — Additional Features Added
+
+### 10. ✅ Categories "See All" Option
+- **File**: `frontend/src/public/Home.tsx`
+- **Change**: Show 3 categories initially, "See All Categories" button to view all
+- **Why**: Better UX for small business - prevents overwhelming users with too many options
+
+### 11. ✅ FAQ Page
+- **File**: `frontend/src/public/FAQPage.tsx` (NEW)
+- **Change**: Added comprehensive FAQ with 10 common wholesale textile questions
+- **Added**: Route `/faq`, Footer link, accordion-style UI
+- **Why**: Customers have common questions - reduces WhatsApp queries
+
+### 12. ✅ Contact Page
+- **File**: `frontend/src/public/ContactPage.tsx` (NEW)
+- **Change**: Dedicated contact page with form, contact info, WhatsApp CTA
+- **Added**: Route `/contact`, Footer link
+- **Why**: Professional presence, alternative to just WhatsApp
+
+### 13. ✅ Sitemap.xml + Robots.txt
+- **File**: `backend/server.py`
+- **Change**: Dynamic `/api/sitemap.xml` and `/robots.txt` endpoints
+- **Why**: Essential for Google SEO indexing
+
+### 14. ✅ Error Boundary
+- **File**: `frontend/src/components/ErrorBoundary.tsx` (NEW)
+- **Change**: Wrapped app with error boundary to prevent full crashes
+- **Why**: Better UX - shows friendly error instead of blank screen
+
+---
+
 ## Future Changes Log
 
 *(Neeche sab new changes add honge — format: Date, File, Change Details)*

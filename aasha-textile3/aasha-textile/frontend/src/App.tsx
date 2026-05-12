@@ -8,7 +8,9 @@ import Videos from './pages/Videos';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import Testimonials from './pages/Testimonials';
+import Reviews from './pages/Reviews';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import PublicLayout from './public/PublicLayout';
 import Home from './public/Home';
@@ -19,6 +21,8 @@ import CartPage from './public/CartPage';
 import PolicyPage from './public/PolicyPage';
 import NotFoundPublic from './public/NotFoundPublic';
 import SearchPage from './public/SearchPage';
+import FAQPage from './public/FAQPage';
+import ContactPage from './public/ContactPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +37,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
     <Routes>
       {/* ========== PUBLIC SITE ========== */}
       <Route element={<PublicLayout />}>
@@ -43,6 +48,8 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/policies/:slug" element={<PolicyPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/contact" element={<ContactPage />} />
       </Route>
 
       {/* ========== ADMIN ========== */}
@@ -61,11 +68,13 @@ export default function App() {
         <Route path="videos" element={<Videos />} />
         <Route path="categories" element={<Categories />} />
         <Route path="testimonials" element={<Testimonials />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
       <Route path="*" element={<NotFoundPublic />} />
     </Routes>
+    </ErrorBoundary>
   </QueryClientProvider>
   );
 }
