@@ -1,7 +1,7 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, Phone, Search, ShoppingCart } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useSettings, useCategories, whatsappLink, useCart } from './usePublicData';
+import { useEffect, useState, useRef } from 'react';
+import { useSettings, useCategories, useProducts, whatsappLink, useCart } from './usePublicData';
 import { resolveImage } from '../lib/api';
 
 export default function PublicHeader() {
@@ -11,6 +11,30 @@ export default function PublicHeader() {
   const { totalItems } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+
+  // ✅ Search Autocomplete
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { data: searchResults } = useProducts(searchQuery.length >= 2 ? { q: searchQuery, limit: 8 } : undefined);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -65,10 +89,48 @@ export default function PublicHeader() {
         </nav>
 
         {/* Desktop CTA */}
-        {/* Search */}
-        <Link to="/search" className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-500 hover:border-stone-400 transition mr-1">
-          <Search size={14} /> Search...
-        </Link>
+        {/* ✅ Search with Autocomplete */}
+        <div ref={searchRef} className="relative hidden lg:block mr-1">
+          <form onSubmit={handleSearchSubmit}>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-500 hover:border-stone-400 transition">
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+                className="bg-transparent border-none outline-none w-20 placeholder:text-stone-400"
+              />
+            </div>
+          </form>
+          {/* Autocomplete Dropdown */}
+          {searchOpen && searchResults && searchResults.length > 0 && (
+            <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden z-50">
+              {searchResults.slice(0, 6).map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/product/${p.id}`}
+                  onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-cream-50 border-b border-stone-50 last:border-0"
+                >
+                  {p.image_url && <img src={resolveImage(p.image_url)} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-stone-900 truncate">{p.name}</div>
+                    <div className="text-xs text-stone-500">{p.category} {p.rate && `• ${p.rate}`}</div>
+                  </div>
+                </Link>
+              ))}
+              <Link
+                to={`/search?q=${encodeURIComponent(searchQuery)}`}
+                onClick={() => { setSearchOpen(false); }}
+                className="block px-3 py-2 text-center text-sm text-brand-600 hover:bg-cream-50 font-medium"
+              >
+                View all results →
+              </Link>
+            </div>
+          )}
+        </div>
         {/* Cart icon */}
         <Link to="/cart" className="relative hidden lg:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-stone-100 transition">
           <ShoppingCart size={20} className="text-stone-700"/>
@@ -101,8 +163,13 @@ export default function PublicHeader() {
               <button onClick={() => setOpen(false)} className="p-2 -mr-2 rounded-lg hover:bg-stone-200/70"><X size={20}/></button>
             </div>
             <div className="p-5 space-y-1">
+              {/* ✅ Mobile Search Input */}
+              <form onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('mobile-search') as HTMLInputElement)?.value?.trim(); if(q) { navigate(`/search?q=${encodeURIComponent(q)}`); setOpen(false); }}} className="relative mb-3">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"/>
+                <input name="mobile-search" type="search" placeholder="Search fabrics..." autoComplete="off"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+              </form>
               <Link to="/" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">Home</Link>
-              <Link to="/search" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">🔍 Search</Link>
               <Link to="/cart" onClick={() => setOpen(false)} className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">
                 <span>🛒 Cart</span>
                 {totalItems > 0 && <span className="bg-brand-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}

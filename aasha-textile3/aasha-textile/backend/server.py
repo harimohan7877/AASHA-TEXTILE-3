@@ -328,6 +328,27 @@ class SettingsUpdate(BaseModel):
     privacy_policy: Optional[str] = None
 
 
+# ============================================================
+# REVIEWS (Public - requires admin approval)
+# ============================================================
+
+class ReviewIn(BaseModel):
+    product_id: str
+    author_name: str
+    author_email: Optional[str] = None
+    rating: int = Field(..., ge=1, le=5)
+    message: str
+    city: Optional[str] = None
+
+class ReviewUpdate(BaseModel):
+    author_name: Optional[str] = None
+    author_email: Optional[str] = None
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    message: Optional[str] = None
+    city: Optional[str] = None
+    is_approved: Optional[bool] = None
+
+
 class TestimonialIn(BaseModel):
     author_name: str = Field(..., min_length=1)
     city: Optional[str] = None
@@ -728,6 +749,69 @@ async def delete_testimonial(tid: str, current=Depends(get_current_admin)):
 
 
 # ============================================================
+# REVIEWS (Product reviews with admin approval)
+# ============================================================
+
+@api.get("/reviews")
+async def list_reviews(product_id: Optional[str] = None, approved_only: bool = True):
+    """Public: approved reviews for a product (or all products if no product_id)."""
+    query: Dict[str, Any] = {}
+    if product_id:
+        query["product_id"] = product_id
+    if approved_only:
+        query["is_approved"] = True
+    cursor = db.reviews.find(query).sort([("created_at", -1)])
+    items = [clean_doc(d) for d in await cursor.to_list(length=100)]
+    return {"items": items, "count": len(items)}
+
+
+@api.get("/reviews/admin")
+async def list_reviews_admin(approved: Optional[bool] = None, current=Depends(get_current_admin)):
+    """Admin: all reviews with optional filter."""
+    query: Dict[str, Any] = {}
+    if approved is not None:
+        query["is_approved"] = approved
+    cursor = db.reviews.find(query).sort([("created_at", -1)])
+    items = [clean_doc(d) for d in await cursor.to_list(length=500)]
+    return {"items": items, "count": len(items)}
+
+
+@api.post("/reviews")
+async def create_review(payload: ReviewIn):
+    """Public: Submit a review (requires admin approval)."""
+    doc = payload.model_dump()
+    doc["id"] = str(uuid.uuid4())
+    doc["is_approved"] = False  # Default: not approved
+    doc["created_at"] = now_utc()
+    doc["updated_at"] = now_utc()
+    await db.reviews.insert_one(doc)
+    return {"ok": True, "message": "Review submitted! It will be visible after admin approval."}
+
+
+@api.patch("/reviews/{rid}")
+async def update_review(rid: str, payload: ReviewUpdate, current=Depends(get_current_admin)):
+    """Admin: update review (including approval)."""
+    existing = await db.reviews.find_one({"id": rid})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Review not found")
+    updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    if not updates:
+        return clean_doc(existing)
+    updates["updated_at"] = now_utc()
+    await db.reviews.update_one({"id": rid}, {"$set": updates})
+    doc = await db.reviews.find_one({"id": rid})
+    return clean_doc(doc)
+
+
+@api.delete("/reviews/{rid}")
+async def delete_review(rid: str, current=Depends(get_current_admin)):
+    res = await db.reviews.delete_one({"id": rid})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"ok": True}
+
+
+# ============================================================
 # SETTINGS
 # ============================================================
 
@@ -817,6 +901,15 @@ async def public_products(
         "items": items,
         "pagination": {"page": page, "per_page": per_page, "total": total, "pages": pages}
     }
+
+@api.get("/public/products/{product_id}")
+async def public_get_product(product_id: str):
+    """Public: Get a single product by ID (no auth required)."""
+    doc = await db.products.find_one({"id": product_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return clean_doc(doc)
+
 
 @api.get("/public/settings")
 async def public_settings():

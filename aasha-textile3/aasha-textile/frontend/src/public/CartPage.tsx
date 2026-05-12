@@ -88,10 +88,11 @@ export default function CartPage() {
           ))}
         </div>
 
-        {/* WhatsApp Order */}
-        <div className="bg-white rounded-2xl border border-stone-200 p-6">
-          <h3 className="font-semibold text-stone-900 mb-1">Order karna hai?</h3>
-          <p className="text-sm text-stone-500 mb-4">WhatsApp pe message jayega — {settings?.store_name || 'Aasha Textile'} confirm karega.</p>
+        {/* Continue Shopping + WhatsApp Order */}
+        <div className="space-y-4">
+          <Link to="/" className="pub-btn-outline w-full justify-center !py-4 !text-base">
+            Aur Products Dekhein
+          </Link>
           <a href={whatsappOrder()} target="_blank" rel="noreferrer"
             className="pub-btn-whatsapp w-full justify-center !py-4 !text-base">
             <WhatsAppIcon className="w-5 h-5"/>

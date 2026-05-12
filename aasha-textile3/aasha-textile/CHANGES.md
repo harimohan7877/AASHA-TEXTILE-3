@@ -1,0 +1,119 @@
+# CHANGES.md — Aasha Textile Website
+
+Yeh file har change ko track karega — ki kya se kya change kiya gaya.
+
+---
+
+## 2026-05-12 — Current State (Baseline)
+
+### Tech Stack
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS
+- **Backend**: FastAPI + Motor (async MongoDB)
+- **Database**: MongoDB (local/Render deployed)
+
+### Recent Improvements (Latest Commits)
+- ✅ **React Query**: All public data hooks use `@tanstack/react-query` with 5-minute stale time
+- ✅ **LazyImage Component**: New reusable component with blur placeholder effect
+- ✅ **Pagination**: Backend endpoints support `page` and `per_page` query params
+- ✅ **SEO**: JSON-LD structured data + Dynamic Open Graph tags for product pages
+- ✅ **Image CDN**: External ibb.co URLs with lazy loading
+
+### Admin Pages
+- Dashboard, Products, Categories, Videos, Testimonials, Settings, Login
+
+### Public Pages
+- Home, CategoryPage, ProductDetail, AboutPage, PolicyPage, CartPage, TestimonialsSection
+
+### Files Changed (from git status)
+- `backend/server.py` — Modified
+- `frontend/src/App.tsx` — Modified
+- `frontend/src/public/ProductDetail.tsx` — Modified
+- `frontend/src/public/PublicHeader.tsx` — Modified
+
+---
+
+## 2026-05-12 — Website Audit Report
+
+### Categories of Improvements
+
+#### 🔴 MUST HAVE (Zaroori - Abhi Karna Hoga)
+
+| # | Issue | Location | Fix Required |
+|---|-------|----------|--------------|
+| 1 | No "Write Review" form on Product Page | `ProductDetail.tsx` | Add review submission form for customers |
+| 2 | Search not working on Mobile drawer | `PublicHeader.tsx` | Add search input in mobile menu |
+| 3 | Cart page "Continue Shopping" missing | `CartPage.tsx` | Add prominent continue shopping button |
+| 4 | No public endpoint for single product | `server.py` | Add `/api/public/products/{id}` endpoint |
+| 5 | Homepage JSON-LD missing | `Home.tsx` | Add Organization structured data for SEO |
+
+#### 🟠 SHOULD HAVE (Dhire-Dhire Karne Ke)
+
+| # | Issue | Location | Fix Required |
+|---|-------|----------|--------------|
+| 6 | No "New Arrivals" section | `Home.tsx` | Add recently added products section |
+| 7 | No FAQ Page | New file | Create `/faq` page |
+| 8 | No dedicated Contact page | `App.tsx` | Create `/contact` page |
+| 9 | No sitemap.xml/robots.txt | `server.py` | Add SEO endpoints |
+| 10 | No quick view on product hover | `ProductCard.tsx` | Add hover modal |
+| 11 | No "Recently Viewed" feature | New component | Track viewed products |
+| 12 | No error boundaries | `App.tsx` | Add React error boundary |
+| 13 | ProductDetail skeleton missing | `ProductDetail.tsx` | Add skeleton UI |
+| 14 | No quantity selector on cards | `ProductCard.tsx` | Quick add feature |
+| 15 | No category filter chips | `CategoryPage.tsx` | Add quick filters |
+| 16 | No share product feature | `ProductDetail.tsx` | Add share buttons |
+| 17 | No dashboard charts | `Dashboard.tsx` | Add visual stats |
+
+#### 🟢 NICE TO HAVE (Optional - Sundar Banane Ke Liye)
+
+| # | Enhancement | Location |
+|---|--------------|----------|
+| 18 | Newsletter signup | `PublicFooter.tsx` |
+| 19 | About the Owner section | `AboutPage.tsx` |
+| 20 | Better testimonials display | `TestimonialsSection.tsx` |
+| 21 | Instagram feed integration | New component |
+| 22 | Bulk inquiry feature | Cart/Page |
+| 23 | Price range slider | `CategoryPage.tsx` |
+| 24 | "Notify When Available" for out of stock | `ProductDetail.tsx` |
+| 25 | Language toggle (Hindi/English) | `PublicHeader.tsx` |
+| 26 | Better mobile navigation | `PublicHeader.tsx` |
+| 27 | Product video preview | `ProductDetail.tsx` |
+| 28 | Related searches | `SearchPage.tsx` |
+| 29 | Loading states for actions | Various forms |
+| 30 | Grid/List view toggle | `CategoryPage.tsx` |
+| 31 | Better empty states | Various pages |
+
+---
+
+## 2026-05-12 — Bug Fixes Applied
+
+### 1. ✅ Public Product Endpoint (Bug Fix)
+- **File**: `backend/server.py`
+- **Change**: Added `/api/public/products/{product_id}` endpoint for public product access without auth
+- **Why**: Direct product links were failing, customers couldn't view products directly
+
+### 2. ✅ Review Form on Product Page (New Feature)
+- **File**: `frontend/src/public/ProductDetail.tsx`
+- **Change**: Added "Write a Review" form with star rating, name, city, message fields
+- **Backend**: Uses existing `/api/reviews` POST endpoint (requires admin approval)
+- **Why**: Customers can now submit reviews directly from product page
+
+### 3. ✅ Mobile Search Input (Bug Fix)
+- **File**: `frontend/src/public/PublicHeader.tsx`
+- **Change**: Added working search input in mobile drawer with form submission
+- **Why**: Mobile users couldn't search - only link existed
+
+### 4. ✅ Cart Continue Shopping Button (UX Fix)
+- **File**: `frontend/src/public/CartPage.tsx`
+- **Change**: Added "Aur Products Dekhein" button linking to home
+- **Why**: Users stuck on cart page with no clear way to continue shopping
+
+### 5. ✅ Homepage JSON-LD SEO (SEO Fix)
+- **File**: `frontend/src/public/Home.tsx`
+- **Change**: Added WebSite + Organization structured data for Google
+- **Why**: Homepage wasn't showing rich snippets in search results
+
+---
+
+## Future Changes Log
+
+*(Neeche sab new changes add honge — format: Date, File, Change Details)*

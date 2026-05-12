@@ -1,11 +1,12 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, Star, Phone, Award, ShieldCheck, Truck, RotateCcw, BadgeCheck, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Star, Phone, Award, ShieldCheck, Truck, RotateCcw, BadgeCheck, ShoppingCart, X, ZoomIn, Send, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api, resolveImage } from '../lib/api';
 import { useProducts, useSettings, whatsappLink, slugify, useCart } from './usePublicData';
 import ProductCard from './ProductCard';
 import { WhatsAppIcon } from './PublicHeader';
 import type { Product } from './usePublicData';
+import toast from 'react-hot-toast';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,10 @@ const [p, setP] = useState<Product | null | undefined>(undefined);
   const [activeImg, setActiveImg] = useState<string>('');
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
+
+  // ✅ Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState('');
 
   function handleAddToCart() {
     if (!p) return;
@@ -26,7 +31,7 @@ useEffect(() => {
     if (!id) return;
     setP(undefined);
     setActiveImg('');
-    api.get(`/products/${id}`).then(r => {
+    api.get(`/public/products/${id}`).then(r => {
       setP(r.data);
       setActiveImg(r.data?.image_url || '');
     }).catch(() => setP(null));
@@ -112,14 +117,20 @@ useEffect(() => {
         <div className="pub-container grid md:grid-cols-2 gap-8 lg:gap-16 items-start">
          {/* Image Gallery */}
           <div className="space-y-3">
-            {/* Main image */}
-            <div className="relative rounded-3xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-soft aspect-square">
+            {/* Main image - click to zoom */}
+            <div
+              className="relative rounded-3xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-soft aspect-square cursor-zoom-in group"
+              onClick={() => { setLightboxImg(activeImg || p.image_url || ''); setLightboxOpen(true); }}
+            >
               {activeImg || p.image_url ? (
-                <img src={resolveImage(activeImg || p.image_url || '')} alt={p.name} className="w-full h-full object-cover"/>
+                <img src={resolveImage(activeImg || p.image_url || '')} alt={p.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"/>
               ) : <div className="w-full h-full grid place-items-center text-stone-300 font-display text-7xl">A</div>}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {p.is_featured && <span className="inline-flex items-center gap-1 bg-stone-900 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full"><Star size={12} fill="currentColor"/> Bestseller</span>}
                 {out && <span className="inline-flex items-center bg-red-600/95 text-white text-xs font-semibold tracking-wider uppercase px-2.5 py-1.5 rounded-full">Out of Stock</span>}
+              </div>
+              <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <ZoomIn size={20} className="text-stone-700"/>
               </div>
             </div>
             {/* Thumbnails — sirf tab dikhenge jab multiple images hon */}
@@ -224,6 +235,19 @@ useEffect(() => {
           </div>
         </section>
       )}
+
+      {/* ✅ Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-900/95 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
+          <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={() => setLightboxOpen(false)}>
+            <X size={24}/>
+          </button>
+          <img src={resolveImage(lightboxImg)} alt={p.name} className="max-w-[90vw] max-h-[90vh] object-contain" onClick={(e) => e.stopPropagation()}/>
+        </div>
+      )}
+
+      {/* ✅ Write Review Form */}
+      <ReviewForm productId={p.id} productName={p.name} />
     </>
   );
 }
@@ -234,5 +258,88 @@ function Spec({ k, v }: { k: string; v: string }) {
       <dt className="text-stone-500">{k}</dt>
       <dd className="font-medium text-stone-900 text-right">{v}</dd>
     </div>
+  );
+}
+
+// ✅ Write Review Form Component
+function ReviewForm({ productId, productName }: { productId: string; productName: string }) {
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ author_name: '', author_email: '', rating: 5, message: '', city: '' });
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.author_name.trim() || !form.message.trim()) {
+      toast.error('Name aur message zaroori hain');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post('/reviews', { ...form, product_id: productId });
+      toast.success('Review submit ho gaya! Admin approval ke baad publish hoga.');
+      setShowForm(false);
+      setForm({ author_name: '', author_email: '', rating: 5, message: '', city: '' });
+    } catch {
+      toast.error('Kuch gadbad ho gayi. Dobara try karein.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="pub-section bg-cream-50">
+      <div className="pub-container max-w-2xl">
+        {!showForm ? (
+          <button onClick={() => setShowForm(true)} className="pub-btn-primary w-full justify-center !py-4">
+            <Star size={18} className="fill-white"/> Write a Review
+          </button>
+        ) : (
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display text-xl font-semibold text-stone-900">Write Review for {productName}</h3>
+              <button type="button" onClick={() => setShowForm(false)} className="text-stone-400 hover:text-stone-600">
+                <X size={20}/>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Your Name *</label>
+                  <input required value={form.author_name} onChange={e => setForm({...form, author_name: e.target.value})}
+                    className="input" placeholder="Aapka naam"/>
+                </div>
+                <div>
+                  <label className="label">City (Optional)</label>
+                  <input value={form.city} onChange={e => setForm({...form, city: e.target.value})}
+                    className="input" placeholder="e.g. Jaipur, Rajasthan"/>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Your Rating *</label>
+                <div className="flex gap-1">
+                  {[1,2,3,4,5].map(star => (
+                    <button key={star} type="button" onClick={() => setForm({...form, rating: star})}>
+                      <Star size={28} className={`transition ${star <= form.rating ? 'text-amber-400 fill-amber-400' : 'text-stone-300'}`}/>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Your Review *</label>
+                <textarea required rows={4} value={form.message} onChange={e => setForm({...form, message: e.target.value})}
+                  className="input resize-none" placeholder="Is product ke baare mein aapki raay..."/>
+              </div>
+
+              <button type="submit" disabled={submitting} className="pub-btn-primary w-full justify-center !py-3">
+                {submitting ? <><Loader2 size={18} className="animate-spin"/> Submitting...</> : <><Send size={18}/> Submit Review</>}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </section>
   );
 }

@@ -5,7 +5,7 @@ import { resolveImage } from '../lib/api';
 import ProductCard from './ProductCard';
 import { WhatsAppIcon } from './PublicHeader';
 import TestimonialsSection from './TestimonialsSection';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const DEFAULT_HERO = '';
 export default function Home() {
@@ -28,6 +28,61 @@ export default function Home() {
   const heroImg = settings?.hero_image_url ? resolveImage(settings.hero_image_url) : DEFAULT_HERO;
   const storeName = settings?.store_name || 'Aasha Textile';
   const tagline = settings?.tagline || 'Quality Fabric, Wholesale Price';
+
+  // ✅ JSON-LD Structured Data for Homepage SEO
+  useEffect(() => {
+    const websiteJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": storeName,
+      "url": "https://aashatextile.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://aashatextile.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    };
+    const orgJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": storeName,
+      "url": "https://aashatextile.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": settings?.phone,
+        "contactType": "Customer Service",
+        "availableTime": { "openingHoursSpecification": settings?.business_hours }
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Surat",
+        "addressRegion": "Gujarat",
+        "addressCountry": "IN"
+      },
+      "sameAs": [
+        settings?.youtube_url,
+        settings?.instagram_url,
+        settings?.facebook_url
+      ].filter(Boolean)
+    };
+    // Remove old scripts
+    ['homepage-website-jsonld', 'homepage-org-jsonld'].forEach(id => document.getElementById(id)?.remove());
+    // Add new scripts
+    const websiteScript = document.createElement('script');
+    websiteScript.id = 'homepage-website-jsonld';
+    websiteScript.type = 'application/ld+json';
+    websiteScript.textContent = JSON.stringify(websiteJsonLd);
+    document.head.appendChild(websiteScript);
+    const orgScript = document.createElement('script');
+    orgScript.id = 'homepage-org-jsonld';
+    orgScript.type = 'application/ld+json';
+    orgScript.textContent = JSON.stringify(orgJsonLd);
+    document.head.appendChild(orgScript);
+    return () => {
+      document.getElementById('homepage-website-jsonld')?.remove();
+      document.getElementById('homepage-org-jsonld')?.remove();
+    };
+  }, [storeName, settings]);
 
   return (
     <>
