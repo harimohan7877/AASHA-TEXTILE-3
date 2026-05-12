@@ -114,6 +114,30 @@ Yeh file har change ko track karega — ki kya se kya change kiya gaya.
 
 ---
 
+## 2026-05-12 — UI/UX Professional Improvements
+
+### 6. ✅ Product Card Quick Actions
+- **File**: `frontend/src/public/ProductCard.tsx`
+- **Change**: Added hover "Add to Cart" button, wishlist heart icon, better styling
+- **Why**: Modern e-commerce experience - users can quick-add without visiting product page
+
+### 7. ✅ WhatsApp FAB Improved
+- **File**: `frontend/src/public/WhatsAppFab.tsx`
+- **Change**: Added tooltip, better animation, modern shadow effects
+- **Why**: More polished floating button experience
+
+### 8. ✅ CSS Modernization (2026 Standards)
+- **File**: `frontend/src/index.css`
+- **Change**: Added new animations (float, shimmer, scaleIn), glass-card class, hover-lift, hover-zoom effects
+- **Why**: Make site feel more premium and modern
+
+### 9. ✅ Newsletter Signup in Footer
+- **File**: `frontend/src/public/PublicFooter.tsx`
+- **Change**: Added email subscription form
+- **Why**: Capture visitor emails for marketing (future use)
+
+---
+
 ## Future Changes Log
 
 *(Neeche sab new changes add honge — format: Date, File, Change Details)*

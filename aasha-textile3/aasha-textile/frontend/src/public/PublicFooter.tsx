@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Youtube, BadgeCheck } from 'lucide-react';
 import { useSettings, useCategories, whatsappLink, slugify } from './usePublicData';
 import { WhatsAppIcon } from './PublicHeader';
+import toast from 'react-hot-toast';
 
 export default function PublicFooter() {
   const { data: settings } = useSettings();
@@ -24,6 +25,18 @@ export default function PublicFooter() {
           <p className="mt-4 text-sm text-stone-400 leading-relaxed max-w-sm">
             {settings?.about || 'A trusted wholesale textile shop offering premium quality fabrics at best prices.'}
           </p>
+
+          {/* Newsletter - 2026 Style */}
+          <div className="mt-6">
+            <div className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Get Updates</div>
+            <form onSubmit={(e) => { e.preventDefault(); const email = (e.currentTarget.elements.namedItem('newsletter-email') as HTMLInputElement)?.value; if(email) { toast.success('Subscribed!'); (e.currentTarget as HTMLFormElement).reset(); } }} className="flex gap-2">
+              <input name="newsletter-email" type="email" placeholder="Your email" required
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"/>
+              <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+                Join
+              </button>
+            </form>
+          </div>
 
           {/* Trust badges */}
           {(settings?.gst_number || settings?.udyam_number || settings?.established_year) && (
