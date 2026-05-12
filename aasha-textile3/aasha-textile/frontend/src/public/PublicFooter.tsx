@@ -124,12 +124,43 @@ export default function PublicFooter() {
         </div>
       </div>
 
-      {/* Payments strip */}
+      {/* Payments strip with logos */}
       {settings?.payment_methods && (
         <div className="border-t border-stone-800/80 bg-stone-950/60">
-          <div className="pub-container py-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs text-stone-500">
-            <span className="font-semibold text-stone-400 uppercase tracking-wider">Payments Accepted</span>
-            <span className="text-stone-400 text-center sm:text-left">{settings.payment_methods}</span>
+          <div className="pub-container py-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <span className="font-semibold text-stone-400 uppercase tracking-wider text-xs">Payments Accepted</span>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              {/* UPI */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><circle cx="20" cy="20" r="18" fill="#3D00B7"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">U</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">UPI</span>
+              </div>
+              {/* Google Pay */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><rect width="40" height="40" rx="8" fill="#4285F4"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">G</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">Google Pay</span>
+              </div>
+              {/* PhonePe */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><rect width="40" height="40" rx="8" fill="#5F259F"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Pe</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">PhonePe</span>
+              </div>
+              {/* Paytm */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><rect width="40" height="40" rx="8" fill="#00B9F1"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">₹</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">Paytm</span>
+              </div>
+              {/* Bank Transfer */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><rect width="40" height="40" rx="8" fill="#1E3A5F"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Bank</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">NEFT/IMPS</span>
+              </div>
+              {/* Cash */}
+              <div className="bg-white rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+                <svg viewBox="0 0 40 40" className="w-6 h-6"><rect width="40" height="40" rx="8" fill="#2E7D32"/><text x="20" y="25" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">₹</text></svg>
+                <span className="text-stone-700 text-xs font-semibold">Cash</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
