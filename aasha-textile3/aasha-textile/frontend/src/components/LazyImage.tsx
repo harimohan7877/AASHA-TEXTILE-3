@@ -5,9 +5,10 @@ interface LazyImageProps {
   alt: string;
   className?: string;
   onClick?: () => void;
+  onLoad?: () => void;
 }
 
-export default function LazyImage({ src, alt, className = '', onClick }: LazyImageProps) {
+export default function LazyImage({ src, alt, className = '', onClick, onLoad }: LazyImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -28,7 +29,7 @@ export default function LazyImage({ src, alt, className = '', onClick }: LazyIma
         src={src}
         alt={alt}
         loading="lazy"
-        onLoad={() => setLoaded(true)}
+        onLoad={() => { setLoaded(true); onLoad?.(); }}
         onError={() => setError(true)}
         className={`w-full h-full object-cover transition-opacity duration-500 ${
           loaded ? 'opacity-100' : 'opacity-0'

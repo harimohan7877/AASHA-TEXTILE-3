@@ -30,6 +30,7 @@ export default function Home() {
   const storeName = settings?.store_name || 'Aasha Textile';
   const tagline = settings?.tagline || 'Quality Fabric, Wholesale Price';
   const [showAllCats, setShowAllCats] = useState(false);
+  const visibleCatsDisplay = showAllCats ? visibleCats : visibleCats.slice(0, INITIAL_CATS);
 
   // ✅ JSON-LD Structured Data for Homepage SEO
   useEffect(() => {
@@ -183,27 +184,28 @@ export default function Home() {
           ) : visibleCats.length === 0 ? (
             <div className="py-14 text-center text-stone-500">Collections coming soon.</div>
           ) : (
-            <>
+            <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                {(showAllCats ? visibleCats : visibleCats.slice(0, INITIAL_CATS)).map((c) => {
-                const img = c.image_url ? resolveImage(c.image_url) : (catImage[c.name] ? resolveImage(catImage[c.name]!) : '');
-                return (
-                  <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`}
-                    className="group relative block overflow-hidden rounded-2xl ring-1 ring-stone-900/5 bg-cream-100 aspect-[4/3] shadow-sm hover:shadow-soft transition-shadow">
-                    {img ? (
-                      <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-                    ) : <div className="w-full h-full grid place-items-center text-stone-300 font-display text-4xl">A</div>}
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/85 via-stone-900/30 to-transparent"/>
-                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
-                      <div className="font-display text-xl sm:text-2xl font-semibold">{c.name}</div>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="text-xs text-white/80">{c.product_count} products</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-wider uppercase bg-white/10 backdrop-blur px-2.5 py-1 rounded-full border border-white/15">
-                          Explore <ArrowRight size={12}/>
-                        </span>
+                {visibleCatsDisplay.map((c) => {
+                  const img = c.image_url ? resolveImage(c.image_url) : (catImage[c.name] ? resolveImage(catImage[c.name]!) : '');
+                  return (
+                    <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`}
+                      className="group relative block overflow-hidden rounded-2xl ring-1 ring-stone-900/5 bg-cream-100 aspect-[4/3] shadow-sm hover:shadow-soft transition-shadow">
+                      {img ? (
+                        <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                      ) : <div className="w-full h-full grid place-items-center text-stone-300 font-display text-4xl">A</div>}
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-900/85 via-stone-900/30 to-transparent"/>
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
+                        <div className="font-display text-xl sm:text-2xl font-semibold">{c.name}</div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-xs text-white/80">{c.product_count} products</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-wider uppercase bg-white/10 backdrop-blur px-2.5 py-1 rounded-full border border-white/15">
+                            Explore <ArrowRight size={12}/>
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  );
                 })}
               </div>
               {/* See All Button */}
@@ -221,7 +223,7 @@ export default function Home() {
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </section>
