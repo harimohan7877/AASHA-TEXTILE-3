@@ -169,6 +169,21 @@ Yeh file har change ko track karega — ki kya se kya change kiya gaya.
 
 ---
 
+## 2026-05-12 — Google Analytics Setup
+
+### 15. ✅ Google Analytics (GA4) Integration
+- **File**: `frontend/index.html`
+- **Change**: Added GA4 script placeholder
+- **Setup Required**: Replace `YOUR_GA4_MEASUREMENT_ID` with your actual GA4 Measurement ID
+
+**How to get your GA4 ID:**
+1. Go to https://analytics.google.com
+2. Sign in with your Google account
+3. Admin → Create Account or select existing
+4. Data Streams → Web → Copy Measurement ID (format: G-XXXXXXXXXX)
+
+---
+
 ## Future Changes Log
 
 *(Neeche sab new changes add honge — format: Date, File, Change Details)*
