@@ -12,6 +12,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import re
 import logging
 import base64
 import io
@@ -111,14 +112,13 @@ async def on_startup():
         })
         logger.info(f"Seeded admin: {ADMIN_EMAIL}")
     else:
-        pass
-    # Keep the password in sync with env on restart (simple for single-admin setup)
-    if not pwd_context.verify(ADMIN_PASSWORD, existing["password_hash"]):
-        await db.admins.update_one(
-            {"email": ADMIN_EMAIL},
-            {"$set": {"password_hash": pwd_context.hash(ADMIN_PASSWORD)}}
-        )
-        logger.info("Admin password synced from .env")
+        # Keep the password in sync with env on restart (simple for single-admin setup)
+        if not pwd_context.verify(ADMIN_PASSWORD, existing["password_hash"]):
+            await db.admins.update_one(
+                {"email": ADMIN_EMAIL},
+                {"$set": {"password_hash": pwd_context.hash(ADMIN_PASSWORD)}}
+            )
+            logger.info("Admin password synced from .env")
 
     # Settings seed / backfill defaults for missing keys
     DEFAULT_SETTINGS = {
@@ -209,8 +209,16 @@ async def on_startup():
     # Indexes
     await db.products.create_index([("sort_order", -1), ("created_at", -1)])
     await db.products.create_index("category")
+    await db.products.create_index("id", unique=True)
     await db.videos.create_index("video_id", unique=True)
+    await db.videos.create_index("id", unique=True)
     await db.categories.create_index("slug", unique=True)
+    await db.categories.create_index("id", unique=True)
+    await db.testimonials.create_index("id", unique=True)
+    await db.reviews.create_index("id", unique=True)
+    await db.images.create_index("id", unique=True)
+    await db.admins.create_index("id", unique=True)
+    await db.admins.create_index("email", unique=True)
 
     logger.info("Startup complete.")
 
@@ -468,6 +476,7 @@ async def get_image(image_id: str):
 
 @api.get("/products")
 async def list_products(
+    request: Request,
     q: Optional[str] = None,
     category: Optional[str] = None,
     stock_status: Optional[str] = None,
@@ -479,11 +488,12 @@ async def list_products(
 ):
     query: Dict[str, Any] = {}
     if q:
+        escaped_q = re.escape(q)
         query["$or"] = [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"name_en": {"$regex": q, "$options": "i"}},
-            {"variety": {"$regex": q, "$options": "i"}},
-            {"info": {"$regex": q, "$options": "i"}},
+            {"name": {"$regex": escaped_q, "$options": "i"}},
+            {"name_en": {"$regex": escaped_q, "$options": "i"}},
+            {"variety": {"$regex": escaped_q, "$options": "i"}},
+            {"info": {"$regex": escaped_q, "$options": "i"}},
         ]
     if category:
         query["category"] = category
@@ -498,14 +508,18 @@ async def list_products(
     elif sort == "name":
         sort_spec = [("name", 1)]
 
-    # Pagination
-    skip = (page - 1) * per_page
-    total = await db.products.count_documents(query)
-    pages = (total + per_page - 1) // per_page
+    # If per_page is not explicitly in query parameters, use limit
+    has_per_page = "per_page" in request.query_params
+    effective_limit = per_page if has_per_page else limit
 
-    cursor = db.products.find(query).sort(sort_spec).skip(skip).limit(per_page)
-    items = [clean_doc(d) for d in await cursor.to_list(length=per_page)]
-    return {"items": items, "count": len(items), "pagination": {"page": page, "per_page": per_page, "total": total, "pages": pages}}
+    # Pagination
+    skip = (page - 1) * effective_limit
+    total = await db.products.count_documents(query)
+    pages = (total + effective_limit - 1) // effective_limit
+
+    cursor = db.products.find(query).sort(sort_spec).skip(skip).limit(effective_limit)
+    items = [clean_doc(d) for d in await cursor.to_list(length=effective_limit)]
+    return {"items": items, "count": len(items), "pagination": {"page": page, "per_page": effective_limit, "total": total, "pages": pages}}
 
 
 @api.get("/products/{product_id}")
@@ -867,6 +881,7 @@ async def dashboard_stats(current=Depends(get_current_admin)):
 
 @api.get("/public/products")
 async def public_products(
+    request: Request,
     category: Optional[str] = None,
     featured: Optional[bool] = None,
     limit: int = 500,
@@ -880,26 +895,30 @@ async def public_products(
     if featured is not None:
         query["is_featured"] = featured
     if q:
+        escaped_q = re.escape(q)
         query["$or"] = [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"name_en": {"$regex": q, "$options": "i"}},
-            {"variety": {"$regex": q, "$options": "i"}},
-            {"category": {"$regex": q, "$options": "i"}},
+            {"name": {"$regex": escaped_q, "$options": "i"}},
+            {"name_en": {"$regex": escaped_q, "$options": "i"}},
+            {"variety": {"$regex": escaped_q, "$options": "i"}},
+            {"category": {"$regex": escaped_q, "$options": "i"}},
         ]
     if limit == 0:
         return {"items": [], "pagination": {"page": 1, "per_page": 20, "total": 0, "pages": 0}}
 
-    # Pagination support
-    skip = (page - 1) * per_page
-    total = await db.products.count_documents(query)
-    pages = (total + per_page - 1) // per_page
+    has_per_page = "per_page" in request.query_params
+    effective_limit = per_page if has_per_page else limit
 
-    cursor = db.products.find(query).sort([("sort_order", -1), ("created_at", -1)]).skip(skip).limit(per_page)
-    items = [clean_doc(d) for d in await cursor.to_list(length=per_page)]
+    # Pagination support
+    skip = (page - 1) * effective_limit
+    total = await db.products.count_documents(query)
+    pages = (total + effective_limit - 1) // effective_limit
+
+    cursor = db.products.find(query).sort([("sort_order", -1), ("created_at", -1)]).skip(skip).limit(effective_limit)
+    items = [clean_doc(d) for d in await cursor.to_list(length=effective_limit)]
 
     return {
         "items": items,
-        "pagination": {"page": page, "per_page": per_page, "total": total, "pages": pages}
+        "pagination": {"page": page, "per_page": effective_limit, "total": total, "pages": pages}
     }
 
 @api.get("/public/products/{product_id}")

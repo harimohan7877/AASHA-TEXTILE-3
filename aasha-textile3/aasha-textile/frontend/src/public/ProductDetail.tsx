@@ -19,6 +19,7 @@ const [p, setP] = useState<Product | null | undefined>(undefined);
   // ✅ Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState('');
+  const [reviews, setReviews] = useState<any[]>([]);
 
   function handleAddToCart() {
     if (!p) return;
@@ -31,10 +32,15 @@ useEffect(() => {
     if (!id) return;
     setP(undefined);
     setActiveImg('');
+    setReviews([]);
     api.get(`/public/products/${id}`).then(r => {
       setP(r.data);
       setActiveImg(r.data?.image_url || '');
     }).catch(() => setP(null));
+
+    api.get('/reviews', { params: { product_id: id, approved_only: true } })
+      .then(r => setReviews(r.data.items || []))
+      .catch(() => setReviews([]));
   }, [id]);
 
   // ✅ NAYA — Tab title product ke naam se set hoga
@@ -245,6 +251,48 @@ useEffect(() => {
           <img src={resolveImage(lightboxImg)} alt={p.name} className="max-w-[90vw] max-h-[90vh] object-contain" onClick={(e) => e.stopPropagation()}/>
         </div>
       )}
+
+      {/* ✅ Reviews List Section */}
+      <section className="pub-section bg-cream-50/50 border-t border-stone-200/60">
+        <div className="pub-container max-w-2xl">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="pub-heading !text-2xl">Customer Reviews</h2>
+            {reviews.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-stone-200 text-sm font-semibold">
+                <Star size={14} className="text-amber-400 fill-amber-400"/>
+                <span>
+                  {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} / 5 ({reviews.length})
+                </span>
+              </div>
+            )}
+          </div>
+
+          {reviews.length === 0 ? (
+            <p className="text-stone-500 text-center py-6">Abhi tak koi reviews nahi hain. Pehle banne ke liye review likhein!</p>
+          ) : (
+            <div className="space-y-4 mb-8">
+              {reviews.map((rev) => (
+                <div key={rev.id} className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} size={14} className={star <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-stone-300'} />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-stone-400">
+                      {rev.created_at ? new Date(rev.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                    </span>
+                  </div>
+                  <p className="text-stone-700 text-sm leading-relaxed mb-2">{rev.message}</p>
+                  <div className="text-xs font-semibold text-stone-500">
+                    — {rev.author_name} {rev.city && <span className="text-stone-400 font-normal">({rev.city})</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ✅ Write Review Form */}
       <ReviewForm productId={p.id} productName={p.name} />

@@ -142,17 +142,26 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
     }
   }
 
- async function upload(file: File) {
+  async function uploadMultiple(files: FileList) {
+    if (files.length === 0) return;
     setUploading(true);
+    const toastId = toast.loading(`Uploading ${files.length} images...`);
     try {
-      const fd = new FormData(); fd.append('file', file);
-      const { data } = await api.post('/images/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fd = new FormData();
+        fd.append('file', file);
+        const { data } = await api.post('/images/upload', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return data.url;
+      });
+      const urls = await Promise.all(uploadPromises);
       const currentImages = form.images || (form.image_url ? [form.image_url] : []);
-      const newImages = [...currentImages, data.url];
+      const newImages = [...currentImages, ...urls];
       setForm({ ...form, images: newImages, image_url: newImages[0] });
-      toast.success('Image uploaded');
+      toast.success(`${files.length} images uploaded successfully`, { id: toastId });
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Upload failed');
+      toast.error(err?.response?.data?.detail || 'One or more uploads failed', { id: toastId });
     } finally {
       setUploading(false);
     }
@@ -197,7 +206,7 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
               <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 grid place-items-center cursor-pointer hover:border-brand-400 transition bg-slate-50">
                 {uploading ? <Loader2 className="animate-spin text-brand-600" size={18}/> : <Upload size={18} className="text-slate-400"/>}
                 <span className="text-[10px] text-slate-400 mt-1">Upload</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}/>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && uploadMultiple(e.target.files)}/>
               </label>
             </div>
             {/* URL input */}
