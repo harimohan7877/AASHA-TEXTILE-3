@@ -105,6 +105,41 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
+## 12. Homepage Video Hero Background (Premium Visual Upgrade)
+* **File changed:** [Home.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/Home.tsx)
+* **Feature Added:**  
+  Homepage Hero section ko static image se premium, cinematic waving silk loops par transition kiya gaya hai.
+  * **AI Video Generation Prompt** ko code header comment ke andar preserve kiya gaya hai taaki future content upgrades ke liye use kiya ja sake.
+  * **Seamless loop configuration:** AutoPlay, Muted, Loop, playsInline standard attributes pass kiye gaye hain jo sabhi major desktop aur mobile browsers ke dynamic video elements ke auto-render requirements ko cross-verify karte hain.
+  * **Fallback visual logic:** Slow internet connections ya API issues ki conditions ke liye image template fallback logic add kiya hai jo image load hone tak ya failure block hone par background visual maintain rakhta hai.
+
+---
+
+## 13. Touch-friendly Interactive Magnifier Zoom (Lupa)
+* **File changed:** [ProductDetail.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/ProductDetail.tsx)
+* **Feature Added:**  
+  Fabric texture and weave details ko examine karne ke liye ek interactive visual magnifier (Lupa) add kiya gaya hai:
+  * **Touch-Move & Hover coordinate tracking:** Drag coordinates (`zoomPos.x` and `zoomPos.y`) percentage basis calculate karte hain aur image transform element origin update karte hain.
+  * **Mobile-friendly responsiveness:** Touch devices par screen page scroll block handle kiya hai taaki drag logic smooth perform kare. Tap events dynamically track kiye hain taaki tap karne par full-screen Lightbox open ho sake aur drag karne par Lupa texture zoom show ho.
+  * **Dynamic CSS Transform:** In-place `scale(2.2)` logic use kiya gaya hai with high-speed rendering (`transform 0.08s ease-out`), jo visual performance enhance karta hai.
+  * **Text Helper Overlay:** User interaction easy karne ke liye instruction message banner dynamically render kiya gaya hai.
+
+---
+
+## 14. B2B Tiered Bulk Pricing & GST Savings Calculator
+* **File changed:** [ProductDetail.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/ProductDetail.tsx)
+* **Feature Added:**  
+  Business buyers ke wholesale user flow ko streamline karne ke liye ek interactive calculator widget configure kiya hai:
+  * **Interactive inputs:** Quantity field with preset helper buttons (`100+`, `200+`, `500+`) integrated.
+  * **Wholesale Tiered Discounts:**
+    * `< 200 units`: Regular rate.
+    * `200 - 499 units`: **8% Wholesale Discount** applied dynamically.
+    * `>= 500 units`: **15% Super Bulk Discount** applied dynamically.
+  * **GST Input Tax Credit Benefit:** Textile categories ke corporate buyers ke liye 5% GST offset calculation box UI me render kiya hai.
+  * **WhatsApp Enquiry Sync:** User click trigger direct dynamic WhatsApp checkout message compose karega, jisme current calculator variables (Quantity, Discount rate, GST saving value, Total amount) sync hook basis transmit hote hain.
+
+---
+
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, and tracking fixes).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, and calculator features).
 * Python source code has been verified and compiled successfully.

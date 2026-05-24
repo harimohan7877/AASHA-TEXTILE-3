@@ -93,8 +93,23 @@ export default function Home() {
       {/* HERO */}
       <section className="relative min-h-[88vh] sm:min-h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImg} alt="" className="w-full h-full object-cover" />
-<div className="absolute inset-0 bg-gradient-to-br from-stone-900/85 via-stone-900/75 to-stone-900/50"/>          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-cream-50"/>
+          {/* 
+            AI Video Generation Prompt (Runway Gen-2 / Luma Dream Machine / Sora / Pika):
+            "Cinematic slow-motion shot of a premium, rich-textured silk and cotton fabric elegantly waving and floating in the air. The camera moves in a gentle macro zoom, highlighting the detailed weave pattern, threads, and high-quality craftsmanship. Warm, harmonious soft studio lighting with gentle highlights and soft shadows. Smooth loop, continuous flowing motion, photorealistic, 8k resolution, elegant cream and terracotta orange color palette. Clean, professional background, no distractions."
+          */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-90"
+            poster={heroImg}
+          >
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-waving-white-silk-fabric-40545-large.mp4" type="video/mp4" />
+            <img src={heroImg} alt="" className="w-full h-full object-cover" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-br from-stone-900/90 via-stone-900/80 to-stone-900/55"/>
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-cream-50"/>
         </div>
         <div className="relative pub-container pt-28 pb-20 text-white w-full">
           <div className="max-w-3xl">
