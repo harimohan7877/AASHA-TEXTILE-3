@@ -134,6 +134,25 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
+## 15. Admin Category Section: Category-specific Product Management
+* **File changed:** [Categories.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Categories.tsx)
+* **Feature Added:**  
+  Admin Categories tab ko upgrade kiya gaya hai taaki categories ke product level tasks ko handle kiya ja sake:
+  * **Manage Products Link:** Category card par "Manage Products (X) →" click interface link configure kiya hai jo category details sub-view panel open karta hai.
+  * **Interactive Product List:** Us category se coordinate hone wale sabhi products ko search query ke sath tab content me review kar sakte hain.
+  * **Action Buttons:** Direct edit, delete, aur custom category product insert options available hain (Category page se bahar jaye bina).
+
+---
+
+## 16. Admin Product Modal: Mobile Category Picker Dropdown Fix
+* **Files changed:** [Products.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Products.tsx), [Categories.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Categories.tsx)
+* **Bug Fixed:**  
+  Pehle, product create/edit form me category select karne ke liye input list tag (`<input list="cat-list" />`) aur `datalist` element use ho rahe the. Datalists mobile browsers par standard display limit aur layout rendering issue create karte hain jis wajah se responsive keyboards trigger hone par dropdown selection cut off ho jate the.
+* **The Fix:**  
+  Is inputs block ko dynamic native `<select>` dropdown selector standard elements se swap kiya hai. Ab ye list options fully responsive hain aur sabhi mobile browsers/keyboards par perfectly scroll and click hote hain.
+
+---
+
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, and zoom features).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view and mobile dropdown fixes).
 * Python source code has been verified and compiled successfully.

@@ -229,10 +229,17 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
           </div>
           <div>
             <label className="label">Category</label>
-            <input list="cat-list" className="input" value={form.category || ''} onChange={(e) => setForm({ ...form, category: e.target.value })}/>
-            <datalist id="cat-list">
-              {categories.map((c: any) => <option key={c.name} value={c.name}/>)}
-            </datalist>
+            <select
+              required
+              className="input bg-white"
+              value={form.category || ''}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+            >
+              <option value="" disabled>Select Category</option>
+              {categories.map((c: any) => (
+                <option key={c.name} value={c.name}>{c.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="label">Rate / Price</label>
