@@ -72,6 +72,39 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
+## 7. Category URL Slug Unification (SEO Fix)
+* **Files changed:** [Home.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/Home.tsx), [PublicHeader.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/PublicHeader.tsx)
+* **Pehle kya issue tha:** Category page links alag-alag formatting standard use karte the (Homepage/Header space formatting use kar rahe the jabki PDP breadcrumbs hyphenated use kar rahe the). Isse same category ke double URLs active ho rahe the, jo bad SEO practice hai.
+* **Ab kya fix kiya gaya:** Sabhi templates ko standard `slugify()` formatting par migrate kiya gaya hai. Ab sabhi category links strictly hyphenated format (e.g., `/category/cotton-silk`) par route honge.
+
+## 8. LazyImage layout shift (Visual jump fix)
+* **File changed:** [ProductCard.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/ProductCard.tsx)
+* **Pehle kya issue tha:** `LazyImage` wrapper div par sizes (`w-full h-full`) pass nahi ho rahi thi, jis se image load hone ke time content jump / layout shift hota tha.
+* **Ab kya fix kiya gaya:** `LazyImage` wrapper ko `w-full h-full` classes pass kiye gaye hain taaki content placeholders visually jump na karein.
+
+## 9. Categories Button Click Action (Desktop)
+* **File changed:** [PublicHeader.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/PublicHeader.tsx)
+* **Pehle kya issue tha:** Desktop navigation par "Categories" button click hone par kuch action perform nahi karta tha (raw unclickable button).
+* **Ab kya fix kiya gaya:** Ise anchor click action diya gaya hai. Homepage par ye smooth scrolling ke through direct `#collection` section par scroll ho jayega aur other pages par redirect/redirection support karega.
+
+## 10. Breadcrumbs Mobile Overflow Truncation
+* **File changed:** [ProductDetail.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/ProductDetail.tsx)
+* **Pehle kya issue tha:** B2B heavy product names hone par breadcrumbs mobile screens par break hokar right overflow kar jate the (horizontal scroll bar visible ho jata tha).
+* **Ab kya fix kiya gaya:** CSS Flex limits (`min-w-0 flex-1 truncate`) wrap parameters set kiye gaye hain taaki long text dynamically screen margin ke inside truncate ho sake.
+
+## 11. Google Analytics (GA4) SPA Virtual Page Views Tracking (Tag Coverage Fix)
+* **File changed:** [App.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/App.tsx)
+* **Pehle kya issue tha (Tag Coverage Warning):**  
+  Aapke Google Analytics properties console mein specific product page (`aashatextile.com/product/5853dcee-c39b-4e90-858b-02a96495ccec`) par **"टैग नहीं किया गया" (Tag Not Found)** warning show ho rahi thi. SPA (Single Page Application) hone ke karan route transitions par automatic page views trigger nahi ho rahe the.
+* **Ab kya fix kiya gaya:**  
+  Humne routing core ([App.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/App.tsx)) mein custom `<AnalyticsTracker />` component render kiya hai, jo React Router ke `useLocation` ko sub-state hook treat karta hai. Jab bhi user kisi product page, category page, ya search query par click karega, background listener dynamically GA4 code hit karega:
+  ```javascript
+  window.gtag('config', 'G-L859X3524E', { page_path: path, page_title: title })
+  ```
+  Is virtual page-view logs support se Google bot ko har product page and URL path par active Google tag signal trace ho jayega aur ye error permanently door ho jayega.
+
+---
+
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including both Products and ProductDetail page updates).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, and tracking fixes).
 * Python source code has been verified and compiled successfully.

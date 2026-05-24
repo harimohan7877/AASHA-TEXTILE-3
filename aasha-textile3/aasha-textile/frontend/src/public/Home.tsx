@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Truck, ShieldCheck, Award, MessageCircleHeart, Phone, MapPin, Play, BadgeCheck, Clock } from 'lucide-react';
-import { useCategories, useProducts, useSettings, useVideos, whatsappLink } from './usePublicData';
+import { useCategories, useProducts, useSettings, useVideos, whatsappLink, slugify } from './usePublicData';
 import { resolveImage } from '../lib/api';
 import ProductCard from './ProductCard';
 import { WhatsAppIcon } from './PublicHeader';
@@ -10,6 +10,7 @@ import { useMemo, useState, useEffect } from 'react';
 const DEFAULT_HERO = '';
 const INITIAL_CATS = 3;
 export default function Home() {
+  const navigate = useNavigate();
   const { data: settings } = useSettings();
   const { data: cats } = useCategories();
   const { data: featured } = useProducts({ featured: true, limit: 8 });
@@ -166,7 +167,7 @@ export default function Home() {
             </div>
           </div>
           {/* Flipkart-style quick search */}
-          <form onSubmit={(e) => { e.preventDefault(); const v = (e.currentTarget.querySelector('input') as HTMLInputElement)?.value?.trim(); if(v) window.location.href=`/search?q=${encodeURIComponent(v)}`; }} className="mb-10">
+          <form onSubmit={(e) => { e.preventDefault(); const v = (e.currentTarget.querySelector('input') as HTMLInputElement)?.value?.trim(); if(v) navigate(`/search?q=${encodeURIComponent(v)}`); }} className="mb-10">
             <div className="relative max-w-xl">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input
@@ -189,7 +190,7 @@ export default function Home() {
                 {visibleCatsDisplay.map((c) => {
                   const img = c.image_url ? resolveImage(c.image_url) : (catImage[c.name] ? resolveImage(catImage[c.name]!) : '');
                   return (
-                    <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`}
+                    <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || slugify(c.name))}`}
                       className="group relative block overflow-hidden rounded-2xl ring-1 ring-stone-900/5 bg-cream-100 aspect-[4/3] shadow-sm hover:shadow-soft transition-shadow">
                       {img ? (
                         <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>

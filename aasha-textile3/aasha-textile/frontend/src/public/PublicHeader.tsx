@@ -1,7 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, Phone, Search, ShoppingCart } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
-import { useSettings, useCategories, useProducts, whatsappLink, useCart } from './usePublicData';
+import { useSettings, useCategories, useProducts, whatsappLink, useCart, slugify } from './usePublicData';
 import { resolveImage } from '../lib/api';
 
 export default function PublicHeader() {
@@ -68,12 +68,17 @@ export default function PublicHeader() {
           <NavLink to="/" end className={({isActive}) => `text-sm font-medium transition-colors ${isActive ? 'text-stone-900' : 'text-stone-600 hover:text-stone-900'}`}>Home</NavLink>
 
           <div className="relative" onMouseEnter={() => setCatOpen(true)} onMouseLeave={() => setCatOpen(false)}>
-            <button className={`text-sm font-medium transition-colors ${catOpen ? 'text-stone-900' : 'text-stone-600 hover:text-stone-900'}`}>Categories</button>
+            <a href="/#collection" onClick={(e) => {
+              if (window.location.pathname === '/') {
+                e.preventDefault();
+                document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }} className={`text-sm font-medium transition-colors ${catOpen ? 'text-stone-900' : 'text-stone-600 hover:text-stone-900'}`}>Categories</a>
             {catOpen && (
               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3">
                 <div className="bg-white rounded-2xl shadow-soft border border-stone-100 p-2 min-w-[220px] animate-fadeIn">
                   {(cats || []).filter(c => (c.product_count || 0) > 0).map((c) => (
-                    <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`}
+                    <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || slugify(c.name))}`}
                       className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-cream-100 text-sm text-stone-700">
                       <span>{c.name}</span>
                       <span className="text-xs text-stone-400">{c.product_count}</span>
@@ -177,7 +182,7 @@ export default function PublicHeader() {
               <Link to="/about" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">About</Link>
               <div className="px-3 py-2 text-xs font-semibold tracking-widest uppercase text-stone-500 mt-3">Shop by Category</div>
               {(cats || []).filter(c => (c.product_count || 0) > 0).map((c) => (
-                <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || c.name.toLowerCase())}`} onClick={() => setOpen(false)}
+                <Link key={c.name} to={`/category/${encodeURIComponent(c.slug || slugify(c.name))}`} onClick={() => setOpen(false)}
                   className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-stone-200/50">
                   <span className="font-medium">{c.name}</span>
                   <span className="text-xs text-stone-400">{c.product_count}</span>

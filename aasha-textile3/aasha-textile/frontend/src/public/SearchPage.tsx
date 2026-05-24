@@ -13,8 +13,8 @@ export default function SearchPage() {
 
   useEffect(() => {
     document.title = q ? `"${q}" — Aasha Textile` : 'Search — Aasha Textile';
-    if (q) {
-      trackEvent('search', { search_term: q, results_count: products?.length || 0 });
+    if (q && products) {
+      trackEvent('search', { search_term: q, results_count: products.length });
     }
   }, [q, products]);
 

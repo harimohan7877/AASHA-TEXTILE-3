@@ -109,12 +109,12 @@ useEffect(() => {
     <>
       <section className="pt-24 pb-8">
         <div className="pub-container">
-          <nav className="flex items-center gap-2 text-xs text-stone-500">
-            <Link to="/" className="hover:text-stone-900">Home</Link>
-            <span>/</span>
-            <Link to={`/category/${encodeURIComponent(slugify(p.category))}`} className="hover:text-stone-900">{p.category}</Link>
-            <span>/</span>
-            <span className="text-stone-900 truncate">{p.name_en || p.name}</span>
+          <nav className="flex items-center gap-2 text-xs text-stone-500 w-full overflow-hidden whitespace-nowrap">
+            <Link to="/" className="hover:text-stone-900 flex-shrink-0">Home</Link>
+            <span className="flex-shrink-0">/</span>
+            <Link to={`/category/${encodeURIComponent(slugify(p.category))}`} className="hover:text-stone-900 truncate max-w-[120px] sm:max-w-none flex-shrink-0">{p.category}</Link>
+            <span className="flex-shrink-0">/</span>
+            <span className="text-stone-900 truncate min-w-0 flex-1">{p.name_en || p.name}</span>
           </nav>
         </div>
       </section>

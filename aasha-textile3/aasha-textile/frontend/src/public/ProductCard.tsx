@@ -30,7 +30,7 @@ export default function ProductCard({ p }: { p: Product }) {
       <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-cream-100 ring-1 ring-stone-900/5 shadow-sm group-hover:shadow-soft transition-all duration-300">
         {p.image_url ? (
           <>
-            <LazyImage src={resolveImage(p.image_url)} alt={p.name} className={`group-hover:scale-[1.04] transition-transform duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} onLoad={() => setImgLoaded(true)} />
+            <LazyImage src={resolveImage(p.image_url)} alt={p.name} className={`w-full h-full group-hover:scale-[1.04] transition-transform duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} onLoad={() => setImgLoaded(true)} />
             {!imgLoaded && <div className="absolute inset-0 bg-cream-100 animate-pulse" />}
           </>
         ) : (
