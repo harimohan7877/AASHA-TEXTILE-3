@@ -126,20 +126,14 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
-## 14. B2B Tiered Bulk Pricing & GST Savings Calculator
+## 14. Direct WhatsApp Enquiry Flow (Calculator Removal)
 * **File changed:** [ProductDetail.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/public/ProductDetail.tsx)
-* **Feature Added:**  
-  Business buyers ke wholesale user flow ko streamline karne ke liye ek interactive calculator widget configure kiya hai:
-  * **Interactive inputs:** Quantity field with preset helper buttons (`100+`, `200+`, `500+`) integrated.
-  * **Wholesale Tiered Discounts:**
-    * `< 200 units`: Regular rate.
-    * `200 - 499 units`: **8% Wholesale Discount** applied dynamically.
-    * `>= 500 units`: **15% Super Bulk Discount** applied dynamically.
-  * **GST Input Tax Credit Benefit:** Textile categories ke corporate buyers ke liye 5% GST offset calculation box UI me render kiya hai.
-  * **WhatsApp Enquiry Sync:** User click trigger direct dynamic WhatsApp checkout message compose karega, jisme current calculator variables (Quantity, Discount rate, GST saving value, Total amount) sync hook basis transmit hote hain.
+* **Update Details:**  
+  User feedback ke aadhar par B2B Wholesale Calculator widget ko complete remove kar diya gaya hai taaki interface simple rahe aur customer ke liye confuse na kare.
+  * WhatsApp click redirection par direct clean query send hoti hai (jaise pehle hoti thi) taaki customer easily chat start kar sakein aur rate discussion direct WhatsApp par hi ho.
 
 ---
 
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, and calculator features).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, and zoom features).
 * Python source code has been verified and compiled successfully.

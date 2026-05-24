@@ -217,11 +217,7 @@ useEffect(() => {
   if (p === undefined) return <div className="pt-40 pb-20 pub-container"><div className="h-96 rounded-3xl bg-cream-100 animate-pulse"/></div>;
 
   const out = p.stock_status === 'out_of_stock';
-  const whatsappText = p
-    ? (parsedRate.numericRate > 0 && !out)
-      ? `Hi, I am interested in purchasing ${qty} ${parsedRate.unit}s of "${p.name}${p.name_en ? ` (${p.name_en})` : ''}".\n\n- Selected Quantity: ${qty} ${parsedRate.unit}s\n- Effective Rate: ₹${effectiveRate.toFixed(2)}/${parsedRate.unit} ${discountPercentage > 0 ? `(Wholesale Discount: ${discountPercentage}% OFF)` : ''}\n- Estimated Subtotal: ₹${totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}\n- GST ITC benefit (5%): ₹${gstSavings.toLocaleString('en-IN', { maximumFractionDigits: 2 })}\n\nPlease confirm availability and dispatch time.`
-      : `Hi, I'm interested in "${p.name}${p.name_en ? ` (${p.name_en})` : ''}" ${p.rate ? '— ' + p.rate : ''}. Can you share more details?`
-    : '';
+  const whatsappText = `Hi, I'm interested in "${p.name}${p.name_en ? ` (${p.name_en})` : ''}" ${p.rate ? '— ' + p.rate : ''}. Can you share more details?`;
 
   return (
     <>
@@ -319,95 +315,6 @@ useEffect(() => {
               {p.panna && <Spec k="Panna (Width)" v={p.panna}/>}
               <Spec k="Stock" v={out ? 'Out of Stock' : 'Available'} />
             </dl>
-
-            {/* B2B Wholesale Calculator Section */}
-            {!out && parsedRate.numericRate > 0 && (
-              <div className="mt-8 bg-cream-50/70 border border-stone-200/60 rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calculator size={18} className="text-brand-700" />
-                  <h3 className="font-display font-semibold text-stone-900">B2B Wholesale Calculator</h3>
-                </div>
-                
-                {/* Quantity Input */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold text-stone-500">
-                    <span>Enter Required Quantity ({parsedRate.unit}s)</span>
-                    <span className="text-brand-700 font-bold">Min. order: 100</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min={100}
-                      value={qty}
-                      onChange={(e) => setQty(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-semibold"
-                    />
-                    <div className="flex gap-1">
-                      {[100, 200, 500].map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => setQty(preset)}
-                          className={`px-3.5 py-2 text-xs font-bold rounded-xl border transition ${
-                            qty === preset
-                              ? 'bg-stone-900 border-stone-900 text-white'
-                              : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-100'
-                          }`}
-                        >
-                          {preset}+
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Wholesale Pricing Tiers Info */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 text-[10px] text-stone-500 font-medium">
-                    <div className={`p-2 rounded-lg border transition ${qty < 200 ? 'bg-brand-50 border-brand-200 text-brand-900 font-bold' : 'bg-white border-stone-100'}`}>
-                      <div>&lt; 200 units</div>
-                      <div className="text-stone-400">Regular rate</div>
-                    </div>
-                    <div className={`p-2 rounded-lg border transition ${qty >= 200 && qty < 500 ? 'bg-brand-50 border-brand-200 text-brand-900 font-bold' : 'bg-white border-stone-100'}`}>
-                      <div>200 - 499 units</div>
-                      <div className="text-emerald-600 font-bold">8% OFF</div>
-                    </div>
-                    <div className={`p-2 rounded-lg border transition ${qty >= 500 ? 'bg-brand-50 border-brand-200 text-brand-900 font-bold' : 'bg-white border-stone-100'}`}>
-                      <div>500+ units</div>
-                      <div className="text-emerald-600 font-bold">15% OFF</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Calculation Details */}
-                <div className="mt-4 pt-4 border-t border-stone-200/60 space-y-2.5 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-stone-500">Effective Rate</span>
-                    <span className="font-semibold text-stone-800">
-                      ₹{effectiveRate.toFixed(2)} / {parsedRate.unit}
-                      {discountPercentage > 0 && (
-                        <span className="ml-1.5 text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100 font-bold">
-                          {discountPercentage}% OFF
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-stone-500">Estimated Subtotal</span>
-                    <span className="font-semibold text-stone-800">
-                      ₹{totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-emerald-700 bg-emerald-50/60 px-3 py-2 rounded-xl border border-emerald-100/50">
-                    <span className="flex items-center gap-1.5 text-xs font-semibold">
-                      <BadgeCheck size={14} /> GST Input Tax Credit (5%)
-                    </span>
-                    <span className="font-bold text-xs">
-                      - ₹{gstSavings.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* CTA */}
             <div className="mt-8 flex flex-wrap gap-3">
