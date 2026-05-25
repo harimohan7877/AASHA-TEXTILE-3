@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, resolveImage } from '../lib/api';
-import { Package, Star, AlertCircle, Video as VideoIcon, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Package, Star, AlertCircle, Video as VideoIcon, TrendingUp, Eye, Users } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { Link } from 'react-router-dom';
 
 type Stats = {
@@ -12,6 +12,9 @@ type Stats = {
   total_videos: number;
   by_category: { name: string; count: number }[];
   recent_products: any[];
+  total_pageviews: number;
+  today_visitors: number;
+  daily_stats: { name: string; pageviews: number; visitors: number }[];
 };
 
 export default function Dashboard() {
@@ -30,6 +33,8 @@ export default function Dashboard() {
     { label: 'In Stock', value: stats.in_stock, icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
     { label: 'Out of Stock', value: stats.out_of_stock, icon: AlertCircle, color: 'bg-red-50 text-red-600' },
     { label: 'Videos', value: stats.total_videos, icon: VideoIcon, color: 'bg-purple-50 text-purple-600' },
+    { label: 'Visitors (Today)', value: stats.today_visitors || 0, icon: Users, color: 'bg-cyan-50 text-cyan-600' },
+    { label: 'Total Pageviews', value: stats.total_pageviews || 0, icon: Eye, color: 'bg-indigo-50 text-indigo-600' },
   ];
 
   return (
@@ -39,7 +44,7 @@ export default function Dashboard() {
         <p className="text-sm text-slate-500">Overview of your store — Aasha Textile</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         {cards.map((c) => (
           <div key={c.label} className="card p-5">
             <div className={`w-10 h-10 rounded-lg ${c.color} grid place-items-center mb-3`}><c.icon size={18} /></div>
@@ -94,6 +99,29 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Website Traffic Analytics (Last 7 Days) */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-slate-900">Website Traffic (Last 7 Days)</h3>
+            <p className="text-xs text-slate-500">Overview of daily unique visitors and pageviews</p>
+          </div>
+        </div>
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stats.daily_stats || []} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="name" fontSize={12} stroke="#64748b" />
+              <YAxis allowDecimals={false} fontSize={12} stroke="#64748b" />
+              <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: 8, fontSize: 12, border: '1px solid #e2e8f0' }} />
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
+              <Bar dataKey="pageviews" fill="#3b82f6" name="Pageviews" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="visitors" fill="#10b981" name="Unique Visitors" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

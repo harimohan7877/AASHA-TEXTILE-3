@@ -153,6 +153,34 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
+## 17. Website Traffic Analytics & Visitor Logger Dashboard
+* **Files changed:** [server.py](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/backend/server.py), [App.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/App.tsx), [Dashboard.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Dashboard.tsx)
+* **Features Added:**
+  * **Visitor Tracking (API):** Backend main `/api/public/track-visit` endpoint add kiya gaya hai jo har page visit ko log karta hai. SHA-256 hash se users ke IP aur User-Agent combine karke privacy-safe unique tracking calculate hoti hai.
+  * **Stats Aggregator:** `/api/dashboard/stats` ko update karke total pageviews, aaj ke unique visitors, aur pichle 7 days ke visitor data stats ko return kiya jata hai.
+  * **Frontend Tracker Hook:** `App.tsx` me background router listener hook add kiya jo route changes track karta hai (skipping `/admin` paths).
+  * **Recharts Dashboard Widget:** Admin Dashboard me statistics widgets ke sath Recharts BarChart rendering incorporate ki gayi hai jo visual weekly analytics representation display karti hai.
+
+---
+
+## 18. AI Product Catalog Bulk Auto-Scanner with Duplicate Detection
+* **Files changed:** [server.py](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/backend/server.py), [AICatalogScannerModal.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/components/AICatalogScannerModal.tsx), [Products.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Products.tsx), [Categories.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Categories.tsx)
+* **Features Added:**
+  * **Bulk Scanner Modal:** Multi-provider client-side scanner (Gemini, OpenAI, Claude, OpenRouter) jo multiple image URLs ko scan karke name, category, variety, description and price parameters resolve karta hai.
+  * **Price Speculation Safeguard:** Strict prompt restriction design ki gayi hai jo pricing guess work disable karti hai. Pricing tabhi input fields me update hoti hai jab wo catalogue image par clear written text format me embedded ho, otherwise field default empty string `""` set hoti hai.
+  * **Duplicate Prevention Check:** Bulk URLs check karne ke liye `/products/check-duplicates` backend list search helper add kiya.
+  * **Confirmation & Manual Override:** Check results me duplicates ko table review list me warning indicator ke sath display kiya jata hai aur default checkboxes uncheck rakhe jate hain. Admin unhe manual approve/check karke force upload kar sakta hai. System koi product unke explicit instruction/confirmation ke bina delete nahi karta.
+
+---
+
+## 19. Form Modal AI Autofill Tool
+* **Files changed:** [Products.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Products.tsx), [Categories.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Categories.tsx)
+* **Features Added:**
+  * New product forms aur existing edit forms dono ke image input details sections me visual **"Ask AI to Autofill Info"** button add kiya hai.
+  * Active image URL ko target provider model coordinate karke content parse karta hai aur single click me forms input text fields populate kar deta hai.
+
+---
+
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view and mobile dropdown fixes).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view, mobile dropdown fixes, bulk scanner, and AI autofill features).
 * Python source code has been verified and compiled successfully.

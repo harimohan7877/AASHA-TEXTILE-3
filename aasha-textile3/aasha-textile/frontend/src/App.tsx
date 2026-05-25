@@ -39,11 +39,25 @@ function AnalyticsTracker() {
   const location = useLocation();
 
   useEffect(() => {
+    const path = location.pathname + location.search;
+
     if (typeof window.gtag !== 'undefined') {
       window.gtag('config', 'G-L859X3524E', {
-        page_path: location.pathname + location.search,
+        page_path: path,
         page_title: document.title
       });
+    }
+
+    // Backend traffic visit tracking (Exclude admin section routes)
+    if (!location.pathname.startsWith('/admin')) {
+      fetch('/api/public/track-visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: path,
+          referrer: document.referrer || ''
+        })
+      }).catch(() => {});
     }
   }, [location]);
 

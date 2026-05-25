@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api, resolveImage } from '../lib/api';
-import { Plus, Pencil, Trash2, X, Loader2, Tags, Upload, ImageIcon, ArrowLeft, Search, Package, Star } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Loader2, Tags, Upload, ImageIcon, ArrowLeft, Search, Package, Star, Cpu } from 'lucide-react';
+import AICatalogScannerModal from '../components/AICatalogScannerModal';
 import toast from 'react-hot-toast';
 
 type Category = {
@@ -23,6 +24,7 @@ export default function Categories() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Category> | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -52,12 +54,15 @@ export default function Categories() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
           <p className="text-sm text-slate-500">{items.length} categories — dynamically scanned from your catalog</p>
         </div>
-        <button onClick={() => setEditing({ name: '', description: '', sort_order: 0 })} className="btn-primary"><Plus size={16}/> Add Category</button>
+        <div className="flex gap-2">
+          <button onClick={() => setScannerOpen(true)} className="btn-secondary flex items-center gap-1.5"><Cpu size={16}/> AI Catalog Scanner</button>
+          <button onClick={() => setEditing({ name: '', description: '', sort_order: 0 })} className="btn-primary"><Plus size={16}/> Add Category</button>
+        </div>
       </div>
 
       {loading ? <div className="py-16 grid place-items-center"><Loader2 className="animate-spin text-brand-600" size={24}/></div> :
@@ -96,6 +101,17 @@ export default function Categories() {
        )}
 
       {editing && <CategoryModal initial={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
+
+      {scannerOpen && (
+        <AICatalogScannerModal
+          categories={items}
+          onClose={() => setScannerOpen(false)}
+          onSaved={() => {
+            setScannerOpen(false);
+            load();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -321,6 +337,51 @@ function CategoryProductFormModal({ initial, categories, onClose, onSaved }: any
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const isEdit = !!initial?.id;
+  const [autofilling, setAutofilling] = useState(false);
+
+  async function handleAIAutofill() {
+    const imageUrl = form.images?.[0] || form.image_url;
+    if (!imageUrl) {
+      toast.error('Pehle image upload karein ya image URL add karein!');
+      return;
+    }
+    const provider = localStorage.getItem('ai_provider') || 'gemini';
+    let key = localStorage.getItem('ai_api_key') || '';
+    if (!key) {
+      const inputKey = prompt('Please enter your Gemini/AI API key to use autofill:');
+      if (!inputKey) return;
+      key = inputKey;
+      localStorage.setItem('ai_api_key', key);
+    }
+    setAutofilling(true);
+    const toastId = toast.loading('AI scanning image and autofilling form...');
+    try {
+      const { callAI } = await import('../lib/ai');
+      const resolvedUrl = imageUrl.startsWith('http') ? imageUrl : `https://iili.io/${imageUrl}.jpg`;
+      const result = await callAI(provider, key, [resolvedUrl]);
+      if (result && result[0]) {
+        const item = result[0];
+        setForm((prev: any) => ({
+          ...prev,
+          name: item.name || prev.name,
+          name_en: item.name || prev.name_en,
+          rate: item.price || prev.rate,
+          info: item.desc || prev.info,
+          variety: item.variety || prev.variety,
+          category: categories.some((c: any) => c.name.toLowerCase() === (item.category || '').toLowerCase())
+            ? categories.find((c: any) => c.name.toLowerCase() === (item.category || '').toLowerCase()).name
+            : prev.category || categories[0]?.name || 'Other'
+        }));
+        toast.success('Form details auto-filled successfully!', { id: toastId });
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'AI Autofill failed', { id: toastId });
+    } finally {
+      setAutofilling(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -392,7 +453,18 @@ function CategoryProductFormModal({ initial, categories, onClose, onSaved }: any
         </div>
         <form onSubmit={submit} className="p-6 grid md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
-            <label className="label">Images (Multiple — pehli = main image)</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="label mb-0">Images (Multiple — pehli = main image)</label>
+              <button
+                type="button"
+                onClick={handleAIAutofill}
+                disabled={autofilling}
+                className="flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-700 font-semibold transition px-2.5 py-1 rounded bg-brand-50 border border-brand-200"
+              >
+                {autofilling ? <Loader2 className="animate-spin" size={12}/> : <Cpu size={12}/>}
+                Ask AI to Autofill Info
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 mb-3">
               {(form.images && form.images.length > 0 ? form.images : form.image_url ? [form.image_url] : []).map((img: string, idx: number) => (
                 <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border-2 border-slate-200 group">

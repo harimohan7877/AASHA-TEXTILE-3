@@ -384,6 +384,16 @@ class PasswordChange(BaseModel):
     new_password: str = Field(..., min_length=6)
 
 
+class VisitIn(BaseModel):
+    path: str
+    referrer: Optional[str] = ""
+
+
+class DuplicateCheckIn(BaseModel):
+    urls: List[str]
+
+
+
 # ============================================================
 # AUTH
 # ============================================================
@@ -568,7 +578,34 @@ async def delete_product(product_id: str, current=Depends(get_current_admin)):
 @api.post("/products/bulk-delete")
 async def bulk_delete_products(ids: List[str], current=Depends(get_current_admin)):
     res = await db.products.delete_many({"id": {"$in": ids}})
-    return {"ok": True, "deleted": res.deleted_count}
+    return {"ok": True, "count": res.deleted_count}
+
+
+@api.post("/products/check-duplicates")
+async def check_duplicates(payload: DuplicateCheckIn, current=Depends(get_current_admin)):
+    """Admin: check which of the provided image URLs already exist."""
+    urls = payload.urls
+    if not urls:
+        return {"existing_urls": []}
+    
+    cursor = db.products.find({
+        "$or": [
+            {"image_url": {"$in": urls}},
+            {"images": {"$in": urls}}
+        ]
+    }, {"image_url": 1, "images": 1})
+    
+    matched = await cursor.to_list(length=len(urls) * 2)
+    
+    existing_urls = set()
+    for doc in matched:
+        if doc.get("image_url"):
+            existing_urls.add(doc["image_url"])
+        for img in doc.get("images", []):
+            existing_urls.add(img)
+            
+    return {"existing_urls": list(existing_urls)}
+
 
 
 # ============================================================
@@ -802,6 +839,25 @@ async def create_review(payload: ReviewIn):
     return {"ok": True, "message": "Review submitted! It will be visible after admin approval."}
 
 
+@api.post("/public/track-visit")
+async def track_visit(request: Request, payload: VisitIn):
+    """Public: Track a visitor request on frontend."""
+    import hashlib
+    client_host = request.client.host if request.client else "unknown"
+    ip_hash = hashlib.md5(client_host.encode()).hexdigest()
+    
+    doc = payload.model_dump()
+    now = now_utc()
+    doc["id"] = str(uuid.uuid4())
+    doc["ip_hash"] = ip_hash
+    doc["created_at"] = now
+    doc["date"] = now.strftime("%Y-%m-%d")
+    
+    await db.visits.insert_one(doc)
+    return {"ok": True}
+
+
+
 @api.patch("/reviews/{rid}")
 async def update_review(rid: str, payload: ReviewUpdate, current=Depends(get_current_admin)):
     """Admin: update review (including approval)."""
@@ -864,6 +920,46 @@ async def dashboard_stats(current=Depends(get_current_admin)):
     recent_cursor = db.products.find({}).sort([("created_at", -1)]).limit(5)
     recent = [clean_doc(d) for d in await recent_cursor.to_list(length=5)]
 
+    # --- Visitor Analytics ---
+    total_pageviews = await db.visits.count_documents({})
+    
+    now = now_utc()
+    today_str = now.strftime("%Y-%m-%d")
+    today_visitors_list = await db.visits.distinct("ip_hash", {"date": today_str})
+    today_visitors = len(today_visitors_list)
+
+    # Last 7 days stats
+    dates = [(now - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(6, -1, -1)]
+    visits_pipeline = [
+        {"$match": {"date": {"$in": dates}}},
+        {"$group": {
+            "_id": "$date",
+            "pageviews": {"$sum": 1},
+            "visitors": {"$addToSet": "$ip_hash"}
+        }}
+    ]
+    
+    visits_data = {}
+    async for r in db.visits.aggregate(visits_pipeline):
+        visits_data[r["_id"]] = {
+            "pageviews": r["pageviews"],
+            "visitors": len(r["visitors"])
+        }
+        
+    daily_stats = []
+    for d in dates:
+        day_data = visits_data.get(d, {"pageviews": 0, "visitors": 0})
+        try:
+            dt = datetime.strptime(d, "%Y-%m-%d")
+            name = dt.strftime("%d %b")
+        except:
+            name = d
+        daily_stats.append({
+            "name": name,
+            "pageviews": day_data["pageviews"],
+            "visitors": day_data["visitors"]
+        })
+
     return {
         "total_products": total_products,
         "featured": featured,
@@ -872,6 +968,9 @@ async def dashboard_stats(current=Depends(get_current_admin)):
         "total_videos": total_videos,
         "by_category": by_category,
         "recent_products": recent,
+        "total_pageviews": total_pageviews,
+        "today_visitors": today_visitors,
+        "daily_stats": daily_stats,
     }
 
 
