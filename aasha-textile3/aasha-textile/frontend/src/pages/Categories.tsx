@@ -3,7 +3,7 @@ import { api, resolveImage } from '../lib/api';
 import { Plus, Pencil, Trash2, X, Loader2, Tags, Upload, ImageIcon, ArrowLeft, Search, Package, Star, Cpu } from 'lucide-react';
 import AICatalogScannerModal from '../components/AICatalogScannerModal';
 import toast from 'react-hot-toast';
-import { getImageUrl, callAI } from '../lib/ai';
+import { getImageUrl, callAI, resolveScannedCategory } from '../lib/ai';
 
 type Category = {
   id: string | null; name: string; slug: string; description?: string; image_url?: string;
@@ -358,7 +358,7 @@ function CategoryProductFormModal({ initial, categories, onClose, onSaved }: any
     const toastId = toast.loading('AI scanning image and autofilling form...');
     try {
       const resolvedUrl = getImageUrl(imageUrl);
-      const result = await callAI(provider, key, [resolvedUrl]);
+      const result = await callAI(provider, key, [resolvedUrl], categories.map((c: any) => c.name));
       if (result && result[0]) {
         const item = result[0];
         setForm((prev: any) => ({
@@ -368,9 +368,7 @@ function CategoryProductFormModal({ initial, categories, onClose, onSaved }: any
           rate: item.price || prev.rate,
           info: item.desc || prev.info,
           variety: item.variety || prev.variety,
-          category: categories.some((c: any) => c.name.toLowerCase() === (item.category || '').toLowerCase())
-            ? categories.find((c: any) => c.name.toLowerCase() === (item.category || '').toLowerCase()).name
-            : prev.category || categories[0]?.name || 'Other'
+          category: resolveScannedCategory(item.category, categories)
         }));
         toast.success('Form details auto-filled successfully!', { id: toastId });
       } else {

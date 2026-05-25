@@ -49,8 +49,15 @@ export async function toBase64(url: string): Promise<{ b64: string; mime: string
   }
 }
 
-export const PROMPT = (n: number) => `Identify the product name, category, variety, and description from the provided fabric image.
+export const PROMPT = (n: number, categories: string[] = []) => {
+  const catPrompt = categories.length > 0
+    ? `Choose the best matching category from this list: [${categories.join(', ')}]. If none of them fit, select "Other" or the closest one.`
+    : `Identify the category of the fabric (e.g., Cotton Fabrics, Rayon Fabrics, etc.).`;
+
+  return `Identify the product name, category, variety, and description from the provided fabric image.
 We are scanning ${n} product images. For each one, identify the product.
+${catPrompt}
+
 Return ONLY raw JSON array of objects (no markdown, no code blocks):
 [{"n":1,"name":"Product Name (Hindi/English)","price":"₹XX","desc":"Max 8 words description","category":"Category Name","variety":"Printed/Plain/etc"}]
 
@@ -60,6 +67,7 @@ CRITICAL RULES:
    - If the price is NOT written as text directly on the image, you MUST output an empty string "" for the price field.
    - Only output a price (e.g., "₹350/meter", "400rs") if it is printed or written directly on the image itself.
 2. Only return JSON. No other text.`;
+};
 
 export function parseJSON(txt: string) {
   const clean = txt.replace(/```json|```/g, '').trim();
@@ -68,7 +76,7 @@ export function parseJSON(txt: string) {
   return JSON.parse(m[0]);
 }
 
-async function callGemini(key: string, batchUrls: string[]) {
+async function callGemini(key: string, batchUrls: string[], categories: string[] = []) {
   const parts: any[] = [];
   for (const url of batchUrls) {
     try {
@@ -78,7 +86,7 @@ async function callGemini(key: string, batchUrls: string[]) {
       parts.push({ text: `[Image unavailable: ${url}]` });
     }
   }
-  parts.push({ text: PROMPT(batchUrls.length) });
+  parts.push({ text: PROMPT(batchUrls.length, categories) });
 
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
     method: 'POST',
@@ -91,7 +99,7 @@ async function callGemini(key: string, batchUrls: string[]) {
   return parseJSON(txt);
 }
 
-async function callOpenAI(key: string, batchUrls: string[]) {
+async function callOpenAI(key: string, batchUrls: string[], categories: string[] = []) {
   const imgContent: any[] = [];
   for (const url of batchUrls) {
     try {
@@ -101,7 +109,7 @@ async function callOpenAI(key: string, batchUrls: string[]) {
       imgContent.push({ type: 'text', text: `[Image unavailable: ${url}]` });
     }
   }
-  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length) });
+  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length, categories) });
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -113,7 +121,7 @@ async function callOpenAI(key: string, batchUrls: string[]) {
   return parseJSON(data.choices?.[0]?.message?.content || '');
 }
 
-async function callClaude(key: string, batchUrls: string[]) {
+async function callClaude(key: string, batchUrls: string[], categories: string[] = []) {
   const imgContent: any[] = [];
   for (const url of batchUrls) {
     try {
@@ -123,7 +131,7 @@ async function callClaude(key: string, batchUrls: string[]) {
       imgContent.push({ type: 'text', text: `[Image unavailable: ${url}]` });
     }
   }
-  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length) });
+  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length, categories) });
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -141,7 +149,7 @@ async function callClaude(key: string, batchUrls: string[]) {
   return parseJSON(txt);
 }
 
-async function callOpenRouter(key: string, batchUrls: string[]) {
+async function callOpenRouter(key: string, batchUrls: string[], categories: string[] = []) {
   const imgContent: any[] = [];
   for (const url of batchUrls) {
     try {
@@ -151,7 +159,7 @@ async function callOpenRouter(key: string, batchUrls: string[]) {
       imgContent.push({ type: 'text', text: `[Image unavailable: ${url}]` });
     }
   }
-  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length) });
+  imgContent.push({ type: 'text', text: PROMPT(batchUrls.length, categories) });
 
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -168,10 +176,37 @@ async function callOpenRouter(key: string, batchUrls: string[]) {
   return parseJSON(data.choices?.[0]?.message?.content || '');
 }
 
-export async function callAI(provider: string, key: string, batchUrls: string[]) {
-  if (provider === 'gemini') return callGemini(key, batchUrls);
-  if (provider === 'openai') return callOpenAI(key, batchUrls);
-  if (provider === 'claude') return callClaude(key, batchUrls);
-  if (provider === 'openrouter') return callOpenRouter(key, batchUrls);
+export async function callAI(provider: string, key: string, batchUrls: string[], categories: string[] = []) {
+  if (provider === 'gemini') return callGemini(key, batchUrls, categories);
+  if (provider === 'openai') return callOpenAI(key, batchUrls, categories);
+  if (provider === 'claude') return callClaude(key, batchUrls, categories);
+  if (provider === 'openrouter') return callOpenRouter(key, batchUrls, categories);
   throw new Error('Unknown provider');
+}
+
+export function resolveScannedCategory(scannedCat: string, categories: any[]) {
+  const cleanScanned = (scannedCat || '').trim().toLowerCase();
+  if (!cleanScanned) return categories[0]?.name || 'Other';
+
+  // 1. Exact case-insensitive match
+  const exactMatch = categories.find(c => c.name.toLowerCase() === cleanScanned);
+  if (exactMatch) return exactMatch.name;
+
+  // 2. Partial match (e.g. "cotton fabrics" contains "cotton")
+  const partialMatch = categories.find(c => 
+    cleanScanned.includes(c.name.toLowerCase()) || 
+    c.name.toLowerCase().includes(cleanScanned)
+  );
+  if (partialMatch) return partialMatch.name;
+
+  // 3. Look for "Other" or "Others" category in DB
+  const otherMatch = categories.find(c => 
+    c.name.toLowerCase() === 'other' || 
+    c.name.toLowerCase() === 'others' ||
+    c.name.toLowerCase().includes('other')
+  );
+  if (otherMatch) return otherMatch.name;
+
+  // 4. Default fallback
+  return categories[0]?.name || 'Other';
 }
