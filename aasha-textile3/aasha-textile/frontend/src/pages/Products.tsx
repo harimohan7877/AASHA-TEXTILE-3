@@ -3,6 +3,7 @@ import { api, resolveImage } from '../lib/api';
 import { Plus, Search, Pencil, Trash2, Star, Package, X, Upload, ImageIcon, Loader2, Cpu } from 'lucide-react';
 import AICatalogScannerModal from '../components/AICatalogScannerModal';
 import toast from 'react-hot-toast';
+import { getImageUrl, callAI } from '../lib/ai';
 
 type Product = {
   id: string; name: string; name_en?: string; variety?: string; rate?: string; cut?: string; panna?: string;
@@ -153,8 +154,7 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
     setAutofilling(true);
     const toastId = toast.loading('AI scanning image and autofilling form...');
     try {
-      const { callAI } = await import('../lib/ai');
-      const resolvedUrl = imageUrl.startsWith('http') ? imageUrl : `https://iili.io/${imageUrl}.jpg`;
+      const resolvedUrl = getImageUrl(imageUrl);
       const result = await callAI(provider, key, [resolvedUrl]);
       if (result && result[0]) {
         const item = result[0];
@@ -232,7 +232,7 @@ function ProductFormModal({ initial, categories, onClose, onSaved }: any) {
   function addImageUrl(url: string) {
     if (!url.trim()) return;
     const currentImages = form.images || (form.image_url ? [form.image_url] : []);
-    const newImages = [...currentImages, url.trim()];
+    const newImages = [...currentImages, getImageUrl(url)];
     setForm({ ...form, images: newImages, image_url: newImages[0] });
   }
 
