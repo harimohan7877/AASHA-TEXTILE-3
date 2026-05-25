@@ -595,6 +595,59 @@ async def delete_no_images(current=Depends(get_current_admin)):
     return {"ok": True, "count": res.deleted_count}
 
 
+@api.post("/products/restore-from-supabase")
+async def restore_from_supabase(current=Depends(get_current_admin)):
+    import requests
+    SUPABASE_URL = "https://qpgrcofsgvezadnwzats.supabase.co"
+    ANON_KEY = (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZ3Jjb2ZzZ3ZlemFkbnd6YXRzIiwi"
+        "cm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTUwMzcsImV4cCI6MjA5MjgzMTAzN30."
+        "TzpfeY7eeC5WErV3E_Ma69fS8Eau4VlOmNBI1f9Pbpk"
+    )
+    headers = {"apikey": ANON_KEY, "Authorization": f"Bearer {ANON_KEY}"}
+    
+    url = f"{SUPABASE_URL}/rest/v1/products?select=*&limit=1000"
+    r = requests.get(url, headers=headers, timeout=30)
+    r.raise_for_status()
+    supabase_products = r.json()
+    
+    imported_count = 0
+    for p in supabase_products:
+        doc = {
+            "id": p["id"],
+            "name": p.get("name") or "",
+            "name_en": p.get("name_en"),
+            "variety": p.get("variety"),
+            "rate": p.get("rate"),
+            "cut": p.get("cut"),
+            "panna": p.get("panna"),
+            "info": p.get("info"),
+            "image_url": p.get("image_url"),
+            "category": p.get("category") or "Other",
+            "stock_status": p.get("stock_status") or "available",
+            "is_featured": bool(p.get("is_featured")),
+            "sort_order": int(p.get("sort_order") or 0)
+        }
+        
+        try:
+            created_at_str = p.get("created_at", "").replace("Z", "+00:00")
+            doc["created_at"] = datetime.fromisoformat(created_at_str)
+        except Exception:
+            doc["created_at"] = datetime.now(timezone.utc)
+            
+        try:
+            updated_at_str = p.get("updated_at", "").replace("Z", "+00:00")
+            doc["updated_at"] = datetime.fromisoformat(updated_at_str)
+        except Exception:
+            doc["updated_at"] = datetime.now(timezone.utc)
+            
+        await db.products.update_one({"id": doc["id"]}, {"$set": doc}, upsert=True)
+        imported_count += 1
+        
+    return {"ok": True, "count": imported_count}
+
+
 @api.post("/products/check-duplicates")
 async def check_duplicates(payload: DuplicateCheckIn, current=Depends(get_current_admin)):
     """Admin: check which of the provided image URLs already exist."""

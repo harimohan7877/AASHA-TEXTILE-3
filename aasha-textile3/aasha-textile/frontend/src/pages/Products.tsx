@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, resolveImage } from '../lib/api';
-import { Plus, Search, Pencil, Trash2, Star, Package, X, Upload, ImageIcon, Loader2, Cpu } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Star, Package, X, Upload, ImageIcon, Loader2, Cpu, RotateCcw } from 'lucide-react';
 import AICatalogScannerModal from '../components/AICatalogScannerModal';
 import toast from 'react-hot-toast';
 import { getImageUrl, callAI, resolveScannedCategory } from '../lib/ai';
@@ -50,6 +50,7 @@ export default function Products() {
   const [recentUploadsCount, setRecentUploadsCount] = useState(0);
   const [cleaningImages, setCleaningImages] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const loadRecentUploadsCount = () => {
     try {
@@ -124,6 +125,23 @@ export default function Products() {
     }
   }
 
+  async function handleRestoreFromSupabase() {
+    if (!confirm("Kya aap sach me backup (Supabase) se data restore karna chahte hain?\nIsse purane products wapas database mein add/update ho jayenge.")) {
+      return;
+    }
+    setRestoring(true);
+    const toastId = toast.loading("Restoring products from Supabase...");
+    try {
+      const res = await api.post('/products/restore-from-supabase');
+      toast.success(`${res.data.count} Products backup se restore kar diye gaye!`, { id: toastId });
+      load();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Restore failed", { id: toastId });
+    } finally {
+      setRestoring(false);
+    }
+  }
+
   async function handleBulkDeleteSelected() {
     if (selectedIds.length === 0) return;
     if (!confirm(`Kya aap sach me in ${selectedIds.length} select kiye gaye products ko delete karna chahte hain?\nIs action ko undo nahi kiya ja sakta!`)) {
@@ -157,7 +175,7 @@ export default function Products() {
       </div>
 
       {maintenanceOpen && (
-        <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 grid md:grid-cols-2 gap-4 animate-fadeIn">
+        <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 grid md:grid-cols-3 gap-4 animate-fadeIn">
           <div>
             <h3 className="font-semibold text-amber-900 flex items-center gap-1.5 text-sm">
               <ImageIcon size={16}/> Clear Missing Images (Bina Photo wale Products Htayein)
@@ -195,6 +213,23 @@ export default function Products() {
                 Rollback AI Uploads
               </button>
             </div>
+          </div>
+
+          <div className="border-t md:border-t-0 md:border-l border-amber-200 pt-4 md:pt-0 md:pl-4">
+            <h3 className="font-semibold text-amber-900 flex items-center gap-1.5 text-sm">
+              <RotateCcw size={16}/> Restore Old Data (Supabase Backup)
+            </h3>
+            <p className="text-xs text-amber-700 mt-1">
+              Supabase backup database se purane original products catalog ko vapas restore/import karein.
+            </p>
+            <button
+              onClick={handleRestoreFromSupabase}
+              disabled={restoring}
+              className="btn-primary bg-amber-600 hover:bg-amber-700 text-white border-none text-xs !py-1.5 !px-3 mt-3 flex items-center gap-1.5 rounded-lg"
+            >
+              {restoring ? <Loader2 className="animate-spin" size={12}/> : <RotateCcw size={12}/>}
+              Restore from Backup
+            </button>
           </div>
         </div>
       )}
