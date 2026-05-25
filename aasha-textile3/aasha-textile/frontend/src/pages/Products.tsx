@@ -44,6 +44,84 @@ export default function Products() {
     load();
   }
 
+  const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [recentUploadsCount, setRecentUploadsCount] = useState(0);
+  const [cleaningImages, setCleaningImages] = useState(false);
+  const [rollingBack, setRollingBack] = useState(false);
+
+  const loadRecentUploadsCount = () => {
+    try {
+      const historyRaw = localStorage.getItem('ai_uploaded_history');
+      if (historyRaw) {
+        const history = JSON.parse(historyRaw);
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const validToday = history.filter((x: any) => x.timestamp > cutoff);
+        setRecentUploadsCount(validToday.length);
+      } else {
+        setRecentUploadsCount(0);
+      }
+    } catch {
+      setRecentUploadsCount(0);
+    }
+  };
+
+  useEffect(() => {
+    loadRecentUploadsCount();
+  }, [scannerOpen]);
+
+  async function handleDeleteNoImages() {
+    if (!confirm("Kya aap sach me un sabhi products ko delete karna chahte hain jinke paas koi image nahi hai?\nIs action ko undo nahi kiya ja sakta!")) {
+      return;
+    }
+    setCleaningImages(true);
+    const toastId = toast.loading("Cleaning up products with missing images...");
+    try {
+      const res = await api.post('/products/delete-no-images');
+      toast.success(`${res.data.count} Products delete kar diye gaye!`, { id: toastId });
+      load();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Cleanup failed", { id: toastId });
+    } finally {
+      setCleaningImages(false);
+    }
+  }
+
+  async function handleRollbackRecentScans() {
+    try {
+      const historyRaw = localStorage.getItem('ai_uploaded_history');
+      if (!historyRaw) {
+        toast.error("Koi recent AI scanner uploads nahi mile!");
+        return;
+      }
+      const history = JSON.parse(historyRaw);
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+      const validToday = history.filter((x: any) => x.timestamp > cutoff);
+      if (validToday.length === 0) {
+        toast.error("Agle 24 ghante ke andar koi scans nahi mile!");
+        return;
+      }
+
+      if (!confirm(`Kya aap sach me AI ke aaj ke uploads ko rollback/delete karna chahte hain?\nKul ${validToday.length} products delete ho jayenge!`)) {
+        return;
+      }
+
+      setRollingBack(true);
+      const toastId = toast.loading(`Rolling back ${validToday.length} products...`);
+      const idsToDelete = validToday.map((x: any) => x.id);
+      
+      const res = await api.post('/products/bulk-delete', idsToDelete);
+      toast.success(`${res.data.count} Products successfully rolled back / deleted!`, { id: toastId });
+      
+      localStorage.removeItem('ai_uploaded_history');
+      setRecentUploadsCount(0);
+      load();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Rollback failed");
+    } finally {
+      setRollingBack(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -52,10 +130,56 @@ export default function Products() {
           <p className="text-sm text-slate-500">{items.length} items {cat && `in ${cat}`}</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setMaintenanceOpen(!maintenanceOpen)} className={`btn-secondary flex items-center gap-1.5 border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 ${maintenanceOpen ? 'ring-2 ring-amber-400' : ''}`}>
+            <Trash2 size={16}/> AI Cleanup / Revoke
+          </button>
           <button onClick={() => setScannerOpen(true)} className="btn-secondary flex items-center gap-1.5"><Cpu size={16}/> AI Catalog Scanner</button>
           <button onClick={() => setEditing(EMPTY)} className="btn-primary"><Plus size={16}/> Add Product</button>
         </div>
       </div>
+
+      {maintenanceOpen && (
+        <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 grid md:grid-cols-2 gap-4 animate-fadeIn">
+          <div>
+            <h3 className="font-semibold text-amber-900 flex items-center gap-1.5 text-sm">
+              <ImageIcon size={16}/> Clear Missing Images (Bina Photo wale Products Htayein)
+            </h3>
+            <p className="text-xs text-amber-700 mt-1">
+              Aapke catalog me se un sabhi products ko delete karein jinke paas koi image nahi hai (jo purane system ne bina pic ke create kiye the).
+            </p>
+            <button
+              onClick={handleDeleteNoImages}
+              disabled={cleaningImages}
+              className="btn-primary bg-amber-600 hover:bg-amber-700 text-white border-none text-xs !py-1.5 !px-3 mt-3 flex items-center gap-1.5 rounded-lg"
+            >
+              {cleaningImages ? <Loader2 className="animate-spin" size={12}/> : <Trash2 size={12}/>}
+              Delete Products with No Image
+            </button>
+          </div>
+
+          <div className="border-t md:border-t-0 md:border-l border-amber-200 pt-4 md:pt-0 md:pl-4">
+            <h3 className="font-semibold text-amber-900 flex items-center gap-1.5 text-sm">
+              <Cpu size={16}/> Revoke Today's AI Scans (Batch Rollback)
+            </h3>
+            <p className="text-xs text-amber-700 mt-1">
+              AI dwara pichle 24 ghante ke andar upload kiye gaye products ko bulk me delete karein (Galti sudharne ke liye).
+            </p>
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-xs font-bold text-amber-800 bg-amber-200/50 px-2.5 py-1 rounded-md">
+                Scanned Today: {recentUploadsCount} Products
+              </span>
+              <button
+                onClick={handleRollbackRecentScans}
+                disabled={rollingBack || recentUploadsCount === 0}
+                className="btn-danger bg-red-600 hover:bg-red-700 text-white text-xs !py-1.5 !px-3 flex items-center gap-1 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {rollingBack ? <Loader2 className="animate-spin" size={12}/> : <X size={12}/>}
+                Rollback AI Uploads
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card p-4 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[220px]">

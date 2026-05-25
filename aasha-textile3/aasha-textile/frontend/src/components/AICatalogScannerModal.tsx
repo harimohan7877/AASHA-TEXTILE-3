@@ -324,6 +324,7 @@ export default function AICatalogScannerModal({ categories, onClose, onSaved }: 
     setUploading(true);
     const toastId = toast.loading(`Uploading ${selectedList.length} products to database...`);
     let successCount = 0;
+    const uploadedHistory: { id: string; name: string; timestamp: number }[] = [];
 
     for (const item of selectedList) {
       try {
@@ -340,11 +341,26 @@ export default function AICatalogScannerModal({ categories, onClose, onSaved }: 
           is_featured: false,
           sort_order: 0
         };
-        await api.post('/products', payload);
+        const res = await api.post('/products', payload);
+        if (res.data && res.data.id) {
+          uploadedHistory.push({
+            id: res.data.id,
+            name: item.name,
+            timestamp: Date.now()
+          });
+        }
         successCount++;
       } catch (e) {
         console.error(`Upload failed for product ${item.name}:`, e);
       }
+    }
+
+    if (uploadedHistory.length > 0) {
+      const existingHistoryRaw = localStorage.getItem('ai_uploaded_history');
+      const existingHistory = existingHistoryRaw ? JSON.parse(existingHistoryRaw) : [];
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours ago
+      const filteredExisting = existingHistory.filter((x: any) => x.timestamp > cutoff);
+      localStorage.setItem('ai_uploaded_history', JSON.stringify([...uploadedHistory, ...filteredExisting]));
     }
 
     setUploading(false);

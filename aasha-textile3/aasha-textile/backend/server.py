@@ -581,6 +581,22 @@ async def bulk_delete_products(ids: List[str], current=Depends(get_current_admin
     return {"ok": True, "count": res.deleted_count}
 
 
+@api.post("/products/delete-no-images")
+async def delete_no_images(current=Depends(get_current_admin)):
+    query = {
+        "$or": [
+            {"image_url": None},
+            {"image_url": ""},
+            {"image_url": "None"},
+            {"image_url": {"$exists": False}},
+            {"images": None},
+            {"images": []}
+        ]
+    }
+    res = await db.products.delete_many(query)
+    return {"ok": True, "count": res.deleted_count}
+
+
 @api.post("/products/check-duplicates")
 async def check_duplicates(payload: DuplicateCheckIn, current=Depends(get_current_admin)):
     """Admin: check which of the provided image URLs already exist."""
