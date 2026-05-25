@@ -588,9 +588,7 @@ async def delete_no_images(current=Depends(get_current_admin)):
             {"image_url": None},
             {"image_url": ""},
             {"image_url": "None"},
-            {"image_url": {"$exists": False}},
-            {"images": None},
-            {"images": []}
+            {"image_url": {"$exists": False}}
         ]
     }
     res = await db.products.delete_many(query)

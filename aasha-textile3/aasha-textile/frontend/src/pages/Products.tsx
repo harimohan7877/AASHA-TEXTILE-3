@@ -23,12 +23,14 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   async function load() {
     setLoading(true);
     const { data } = await api.get('/products', { params: { q: q || undefined, category: cat || undefined } });
     setItems(data.items);
     setLoading(false);
+    setSelectedIds([]);
   }
   async function loadCats() {
     const { data } = await api.get('/categories');
@@ -122,6 +124,22 @@ export default function Products() {
     }
   }
 
+  async function handleBulkDeleteSelected() {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Kya aap sach me in ${selectedIds.length} select kiye gaye products ko delete karna chahte hain?\nIs action ko undo nahi kiya ja sakta!`)) {
+      return;
+    }
+    const toastId = toast.loading(`Deleting ${selectedIds.length} products...`);
+    try {
+      await api.post('/products/bulk-delete', selectedIds);
+      toast.success(`${selectedIds.length} Products successfully deleted!`, { id: toastId });
+      setSelectedIds([]);
+      load();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Bulk delete failed", { id: toastId });
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -192,6 +210,34 @@ export default function Products() {
         </select>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="card p-3 bg-red-50 border border-red-200 flex items-center justify-between flex-wrap gap-2 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedIds.length === items.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds(items.map(p => p.id));
+                } else {
+                  setSelectedIds([]);
+                }
+              }}
+              className="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
+            />
+            <span className="text-sm font-semibold text-red-800">
+              Selected {selectedIds.length} of {items.length} products
+            </span>
+          </div>
+          <button
+            onClick={handleBulkDeleteSelected}
+            className="btn-danger bg-red-600 hover:bg-red-700 text-white text-xs !py-1.5 !px-4 flex items-center gap-1.5 rounded-lg"
+          >
+            <Trash2 size={14}/> Delete Selected
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="py-16 grid place-items-center"><Loader2 className="animate-spin text-brand-600" size={24}/></div>
       ) : items.length === 0 ? (
@@ -203,12 +249,26 @@ export default function Products() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map((p) => (
-            <div key={p.id} className="card overflow-hidden hover:shadow-pop transition-shadow group">
+            <div key={p.id} className={`card overflow-hidden hover:shadow-pop transition-shadow group relative ${selectedIds.includes(p.id) ? 'ring-2 ring-brand-500' : ''}`}>
               <div className="aspect-square bg-slate-100 relative overflow-hidden">
+                <div className="absolute top-2 left-2 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(p.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds([...selectedIds, p.id]);
+                      } else {
+                        setSelectedIds(selectedIds.filter(id => id !== p.id));
+                      }
+                    }}
+                    className="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer accent-brand-600 shadow-sm bg-white/95"
+                  />
+                </div>
                 {p.image_url ? (
                   <img src={resolveImage(p.image_url)} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
                 ) : <div className="w-full h-full grid place-items-center text-slate-300"><ImageIcon size={32}/></div>}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                   {p.is_featured && <span className="badge bg-amber-100 text-amber-800"><Star size={10} fill="currentColor"/> Featured</span>}
                   {p.stock_status === 'out_of_stock' && <span className="badge bg-red-100 text-red-700">Out of stock</span>}
                 </div>
