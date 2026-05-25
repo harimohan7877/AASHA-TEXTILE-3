@@ -181,15 +181,15 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
-## 20. Admin Maintenance Tools: AI Cleanup & Revoke Scans
+## 20. Admin Maintenance Tools: AI Cleanup, Revoke Scans & Manual Bulk Deletion
 * **Files changed:** [server.py](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/backend/server.py), [Products.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Products.tsx), [AICatalogScannerModal.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/components/AICatalogScannerModal.tsx)
-* **Features Added:**
-  * **Delete Products without Images:** Backend main POST `/api/products/delete-no-images` endpoint setup kiya jo query search query runtime collections se un sabhi items ko remove karta hai jinke image keys blank `""` hain ya missing (`None`). Frontend button dwara ye functionality execute ki jati hai.
-  * **Today's Scans Rollback (Revoke):** AI catalog scanner ke dwara pichle 24 hours me successfully database upload kiye gaye dynamic items ke IDs `localStorage` key history (`ai_uploaded_history`) me accumulate kiye jate hain. 
-  * **One-Click Bulk Rollback:** Products management page par new "AI Cleanup / Revoke" dashboard tab added. Us par click karte hi active session scan history resolve hoti hai, and dynamic single click me `/api/products/bulk-delete` route call karke poore batch ko delete kar deta hai.
+* **Features Added & Fixes:**
+  * **Delete Products without Images (Corrected):** Backend main POST `/api/products/delete-no-images` endpoint setup kiya. Pehle query strict `$or` condition ke karan un puraane products ko bhi select kar rahi thi jinme images array field missing thi (par `image_url` valid tha). Is query ko ab strictly filter kiya gaya hai jo keval missing or empty `image_url` wale products ko target karegi.
+  * **Today's Scans Rollback (Revoke):** AI scanner uploads ke IDs dynamically `localStorage` `ai_uploaded_history` me save kiye jate hain. Products tab par "AI Cleanup / Revoke" button ke through aap pure batch ko ek click me delete kar sakte hain.
+  * **Manual Checkbox Selection & Bulk Delete:** Product cards par customizable individual selection check-boxes integrate kiye gaye hain. Kisi bhi card par check click karne par bottom status bar me total count display hoga, jahan se aap selected products ko single click me bulk delete kar sakte hain.
 
 ---
 
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view, mobile dropdown fixes, bulk scanner, AI autofill, delete-no-images, and bulk rollback features).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view, mobile dropdown fixes, bulk scanner, AI autofill, delete-no-images, bulk rollback, and manual bulk selection/deletion features).
 * Python source code has been verified and compiled successfully.
