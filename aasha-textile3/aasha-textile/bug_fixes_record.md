@@ -181,6 +181,15 @@ Aapke project mein identify kiye gaye critical bugs aur security vulnerabilities
 
 ---
 
+## 20. Admin Maintenance Tools: AI Cleanup & Revoke Scans
+* **Files changed:** [server.py](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/backend/server.py), [Products.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/pages/Products.tsx), [AICatalogScannerModal.tsx](file:///c:/Users/Admin/Downloads/AASHA-TEXTILE-3/aasha-textile3/aasha-textile/frontend/src/components/AICatalogScannerModal.tsx)
+* **Features Added:**
+  * **Delete Products without Images:** Backend main POST `/api/products/delete-no-images` endpoint setup kiya jo query search query runtime collections se un sabhi items ko remove karta hai jinke image keys blank `""` hain ya missing (`None`). Frontend button dwara ye functionality execute ki jati hai.
+  * **Today's Scans Rollback (Revoke):** AI catalog scanner ke dwara pichle 24 hours me successfully database upload kiye gaye dynamic items ke IDs `localStorage` key history (`ai_uploaded_history`) me accumulate kiye jate hain. 
+  * **One-Click Bulk Rollback:** Products management page par new "AI Cleanup / Revoke" dashboard tab added. Us par click karte hi active session scan history resolve hoti hai, and dynamic single click me `/api/products/bulk-delete` route call karke poore batch ko delete kar deta hai.
+
+---
+
 ### Verification and Checks
-* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view, mobile dropdown fixes, bulk scanner, and AI autofill features).
+* Frontend and typescript type-checking has been verified using production compilation check (`npm run build`), which compiled **successfully without any errors** (including all new slug, layout, tracking, zoom, category product sub-view, mobile dropdown fixes, bulk scanner, AI autofill, delete-no-images, and bulk rollback features).
 * Python source code has been verified and compiled successfully.
