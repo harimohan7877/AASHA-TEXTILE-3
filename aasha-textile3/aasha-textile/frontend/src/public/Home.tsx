@@ -102,10 +102,10 @@ export default function Home() {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover opacity-90 scale-110 origin-center"
             poster={heroImg}
           >
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-waving-white-silk-fabric-40545-large.mp4" type="video/mp4" />
+            <source src="/hero-bg.mp4" type="video/mp4" />
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-br from-stone-900/90 via-stone-900/80 to-stone-900/55"/>
