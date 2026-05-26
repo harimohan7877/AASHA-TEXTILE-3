@@ -24,6 +24,7 @@ import NotFoundPublic from './public/NotFoundPublic';
 import SearchPage from './public/SearchPage';
 import FAQPage from './public/FAQPage';
 import ContactPage from './public/ContactPage';
+import { api } from './lib/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,13 +51,9 @@ function AnalyticsTracker() {
 
     // Backend traffic visit tracking (Exclude admin section routes)
     if (!location.pathname.startsWith('/admin')) {
-      fetch('/api/public/track-visit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: path,
-          referrer: document.referrer || ''
-        })
+      api.post('/public/track-visit', {
+        path: path,
+        referrer: document.referrer || ''
       }).catch(() => {});
     }
   }, [location]);
