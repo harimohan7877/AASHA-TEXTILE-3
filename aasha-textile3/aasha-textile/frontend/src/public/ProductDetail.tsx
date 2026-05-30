@@ -217,7 +217,8 @@ useEffect(() => {
   if (p === undefined) return <div className="pt-40 pb-20 pub-container"><div className="h-96 rounded-3xl bg-cream-100 animate-pulse"/></div>;
 
   const out = p.stock_status === 'out_of_stock';
-  const whatsappText = `Hi, I'm interested in "${p.name}${p.name_en ? ` (${p.name_en})` : ''}" ${p.rate ? '— ' + p.rate : ''}. Can you share more details?`;
+  const productLink = window.location.href;
+  const whatsappText = `Hi, I'm interested in "${p.name}${p.name_en ? ` (${p.name_en})` : ''}" ${p.rate ? '— ' + p.rate : ''}.\nLink: ${productLink}\nCan you share more details?`;
 
   return (
     <>
