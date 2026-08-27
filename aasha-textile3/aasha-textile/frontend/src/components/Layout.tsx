@@ -1,11 +1,12 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { LayoutDashboard, Package, Video, Tags, Settings as SettingsIcon, LogOut, Menu, X, MessageSquareQuote, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, Video, Tags, Settings as SettingsIcon, LogOut, Menu, X, MessageSquareQuote, ExternalLink, Sparkles } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { cn } from '../lib/utils';
 
 const items = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/drops', icon: Sparkles, label: 'Video Drops' },
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/categories', icon: Tags, label: 'Categories' },
   { to: '/admin/videos', icon: Video, label: 'Videos' },

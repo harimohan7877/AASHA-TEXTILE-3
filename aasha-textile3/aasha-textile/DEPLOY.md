@@ -1,194 +1,97 @@
-# Aasha Textile — Free Deployment Guide
+# Aasha Textile — Complete Vercel Serverless Deployment Guide (100% Free)
 
-Ye guide aapko **zero rupee** mein apni site deploy karne mein madad karega.
+Ye guide aapko **zero rupee** mein poori site (Frontend + Backend + Database + Cron) deploy karne mein madad karega.
 
-**Stack**: React/Vite frontend + FastAPI backend + MongoDB
-
-**Free hosting**: Vercel (frontend) + Render (backend) + MongoDB Atlas (database)
-
----
-
-## 📦 Step 0 — Local me code extract karke GitHub par push karein
-
-```bash
-# Zip ko apne computer pe extract karo
-unzip aasha-textile.zip
-cd aasha-textile
-
-# Naya git repo init karo
-git init
-git add .
-git commit -m "Initial commit - Aasha Textile"
-git branch -M main
-git remote add origin https://github.com/harimohan7877/AASHA-TEXTILE-3.git
-git push -u origin main
-```
-
-> ⚠️ Agar GitHub repo pe pehle se kuch hai (README, gitignore), toh:
-> ```bash
-> git pull origin main --allow-unrelated-histories
-> git push -u origin main
-> ```
+**Stack**:
+* **Frontend**: React + Vite + Tailwind CSS (Vercel)
+* **Backend**: Vercel Serverless API Routes (Node.js/TypeScript — No separate server needed!)
+* **Database**: MongoDB Atlas (512MB Lifetime Free Tier)
+* **Automation**: Vercel Cron (Daily YouTube video auto-detection) + MongoDB TTL (5-day auto expiry)
 
 ---
 
-## 🗄️ Step 1 — MongoDB Atlas (FREE — 512 MB lifetime)
+## 🚀 Step 1 — MongoDB Atlas Setup (FREE)
 
-1. https://www.mongodb.com/cloud/atlas/register → Sign up
-2. **Build a Database** → **M0 Free** (Mumbai/Singapore region)
-3. **Database Access** → naya user banao (e.g. `aasha_admin` / strong password)
-4. **Network Access** → `Add IP Address` → `0.0.0.0/0` (allow from anywhere)
-5. **Connect** → **Drivers** → **Python** → connection string copy karo
+1. https://www.mongodb.com/cloud/atlas/register par account banayein.
+2. **Build a Database** → **M0 Free** select karein (Region: Mumbai/Singapore).
+3. **Database Access** → Naya database user banayein (e.g. `aasha_admin` aur strong password).
+4. **Network Access** → `Add IP Address` → `0.0.0.0/0` (Allow Access from Anywhere) karein.
+5. **Connect** → **Drivers** → **Node.js** ya **Python** connection string copy karein:
    ```
    mongodb+srv://aasha_admin:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
    ```
-6. Is string mein `<password>` ko apne actual password se replace karo
+   *(Isme `<password>` ki jagah apna actual database password dalein)*
 
-### Existing data (18 products) ko Atlas pe move karein:
-
-Agar aap apna local DB data Atlas pe le jaana chahte ho, `migrate_to_atlas.py` script use karein (already shipped in `/backend/`):
-
+### Run Setup Script (Phase 1 TTL Setup):
+Apne computer par ek baar run karein taaki `drops` collection aur 5-day auto-expiry index ban jaye:
 ```bash
-cd backend
-pip install pymongo motor python-dotenv
-python migrate_to_atlas.py
-# Aapko purana MONGO_URL aur naya ATLAS_URL maange ga
+python backend/setup_drops_collection.py
 ```
 
 ---
 
-## ⚙️ Step 2 — Backend Render.com pe Deploy (FREE)
+## ⚡ Step 2 — Vercel Deployment (Frontend + Serverless Backend)
 
-1. https://dashboard.render.com → **GitHub se Sign in**
-2. **New +** → **Web Service** → repo `AASHA-TEXTILE-3` connect karo
+Ab aapko **Render** par alag se backend chalane ki bilkul zaroorat nahi hai. Sab kuch Vercel par ek saath chalega!
+
+1. https://vercel.com par login karein (Continue with GitHub).
+2. **Add New** → **Project** → repo `AASHA-TEXTILE-3` select karein.
 3. Settings:
-   - **Name**: `aasha-textile-api`
-   - **Region**: Singapore
-   - **Branch**: `main`
-   - **Root Directory**: `backend`
-   - **Runtime**: Python 3
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
-   - **Instance Type**: **Free**
-
-4. **Environment Variables** (add these one by one):
-   ```
-   MONGO_URL = <Atlas connection string from Step 1>
-   DB_NAME = aasha_textile
-   JWT_SECRET = <kuch bhi random 32 char string, e.g. abc123def456ghi789jkl012mno345pq>
-   JWT_ALGORITHM = HS256
-   JWT_EXPIRE_HOURS = 168
-   ADMIN_EMAIL = hs6579178@gmail.com
-   ADMIN_PASSWORD = 787799hhh@@@
-   CORS_ORIGINS = *
-   ```
-
-5. **Create Web Service** → 3-5 min wait karein → URL milega:
-   ```
-   https://aasha-textile-api.onrender.com
-   ```
-
-6. Test karne ke liye browser mein khol ke check karo: `https://aasha-textile-api.onrender.com/api/health`
-   - `{"status":"ok"}` aana chahiye
-
-> 💡 **Render free tier 15 min idle ke baad sleep ho jaata hai**. Solution: https://uptimerobot.com pe sign up karke har 5 min ka HTTP ping setup kar do `https://aasha-textile-api.onrender.com/api/health` pe — site kabhi sleep nahi hogi.
-
----
-
-## 🎨 Step 3 — Frontend Vercel pe Deploy (FREE)
-
-1. https://vercel.com → **Continue with GitHub**
-2. **Add New** → **Project** → repo `AASHA-TEXTILE-3` import karo
-3. Settings:
-   - **Framework Preset**: Vite (auto-detect ho jayega)
+   - **Framework Preset**: `Vite` (Auto-detected)
    - **Root Directory**: `frontend`
-   - **Build Command**: `yarn build` (default)
-   - **Output Directory**: `dist` (default)
+   - **Build Command**: `yarn build` (ya `npm run build`)
+   - **Output Directory**: `dist`
 
-4. **Environment Variables**:
+4. **Environment Variables** (Vercel Settings → Environment Variables mein ye add karein):
+   ```env
+   MONGO_URL=mongodb+srv://aasha_admin:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   DB_NAME=aasha_textile
+   JWT_SECRET=aasha_secret_key_random_32_chars_long
+   JWT_ALGORITHM=HS256
+   JWT_EXPIRE_HOURS=168
+   ADMIN_EMAIL=hs6579178@gmail.com
+   ADMIN_PASSWORD=787799hhh@@@
+   
+   # Optional (YouTube Cron Auto-Detection):
+   # YOUTUBE_API_KEY=your_youtube_api_key
+   # YOUTUBE_UPLOADS_PLAYLIST_ID=UU...
    ```
-   REACT_APP_BACKEND_URL = https://aasha-textile-api.onrender.com
-   ```
-   (Render se mili URL — bina `/` ke last me)
+   *(Note: `REACT_APP_BACKEND_URL` ko blank rakhein ya remove kar dein taaki sabhi calls Vercel ke serverless functions par jayein)*
 
-5. **Deploy** → 1-2 min me URL milega:
-   ```
-   https://aasha-textile-3.vercel.app
-   ```
-
-6. Site khol ke check karo — sab kaam karna chahiye 🎉
+5. **Deploy** button click karein.
+   1-2 minute mein aapki site live ho jayegi! 🎉
 
 ---
 
-## 🌐 Step 4 — Apna domain connect karein (FREE — already aapke paas hai)
+## 🌐 Step 3 — Custom Domain Connect Karein (`aashatextile.com`)
 
-1. Vercel project → **Settings** → **Domains**
-2. Apna domain enter karo (e.g. `aashatextile.com`)
-3. Vercel aapko **2 DNS records** dega:
-   - `A` record: `76.76.21.21`
-   - `CNAME` record: `cname.vercel-dns.com`
-4. Apne domain registrar (GoDaddy/Hostinger/BigRock) ke DNS panel mein ye records add karo
-5. 5-30 min mein domain live ho jayega + automatic FREE SSL (https://)
+1. Vercel Dashboard → **Settings** → **Domains** par jayein.
+2. Apna domain enter karein (e.g. `aashatextile.com`).
+3. Vercel ke 2 DNS records (A Record: `76.76.21.21` aur CNAME: `cname.vercel-dns.com`) apne domain registrar (Hostinger/GoDaddy) ke DNS panel mein dalein.
+4. SSL Certificate aur Domain 10-15 minute mein auto-active ho jayega.
 
 ---
 
-## ✅ Final Checklist
+## 🛑 Step 4 — Render Service Downgrade / Cancel (Retirement)
 
-- [ ] GitHub par code push ho gaya
-- [ ] MongoDB Atlas cluster bana, connection string mil gayi
-- [ ] Render pe backend live, `/api/health` working
-- [ ] Vercel pe frontend live, public URL working
-- [ ] Admin login `/admin/login` se ho raha hai
-- [ ] Custom domain connect ho gaya (optional)
-- [ ] UptimeRobot 5-min ping setup ho gaya (Render sleep prevention)
+Pura traffic Vercel par successfully chalne ke baad:
+1. Render Dashboard par jayein.
+2. Purana backend service suspend/cancel kar dein.
+3. Ab aapka Render ka cold sleep issue hamesha ke liye khatam ho gaya hai!
 
 ---
 
-## 🆘 Common Issues
+## 🔄 Step 5 — End-to-End Testing Flow
 
-**Q: Frontend pe products nahi dikh rahe?**
-A: Check `REACT_APP_BACKEND_URL` Vercel mein sahi hai. Browser DevTools → Network tab mein check karo `/api/...` calls 200 aa rahe hain ya nahi. CORS error ho toh Render backend env me `CORS_ORIGINS=*` ya apna Vercel URL daalo.
-
-**Q: Render backend 500 dera hai?**
-A: Render Dashboard → Logs check karo. 99% chances `MONGO_URL` galat hai ya Atlas Network Access me `0.0.0.0/0` allow nahi kiya.
-
-**Q: Pehla request bahut slow (30 sec) hai?**
-A: Free Render sleep ke baad cold start hota hai. UptimeRobot ping setup karne se solve ho jayega.
-
-**Q: Admin login nahi ho raha?**
-A: Render env mein `ADMIN_EMAIL` aur `ADMIN_PASSWORD` exact same hone chahiye jo aap login pe daal rahe ho.
-
----
-
-## 📁 Folder Structure (Reference)
-
-```
-aasha-textile/
-├── backend/
-│   ├── server.py           # FastAPI app (single file)
-│   ├── migrate.py          # Old Supabase migration (already done)
-│   ├── migrate_to_atlas.py # Local Mongo → Atlas
-│   ├── requirements.txt
-│   ├── tests/
-│   └── .env.example        # Sample env (real .env not in zip)
-├── frontend/
-│   ├── src/
-│   │   ├── pages/          # Admin: Dashboard, Products, Categories, Videos, Testimonials, Settings
-│   │   ├── public/         # Public site: Home, Category, Product, About, Policies, etc.
-│   │   ├── components/
-│   │   ├── lib/
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── .env.example
-├── memory/
-│   └── test_credentials.md
-└── DEPLOY.md               # Ye file
-```
-
----
-
-🎉 **Bas itna hi! Sab steps follow karne ke baad aapki site live ho jayegi — ZERO rupee mein.**
-
-Koi step me atak jao toh chat me poochh lo — me help kar dunga.
+1. **Admin Panel**:
+   - `/admin/login` par login karein (`hs6579178@gmail.com` / `787799hhh@@@`).
+   - **Video Drops** tab mein jayein.
+   - **New Video Drop** par click karke YouTube link dalein.
+   - Drop banne ke baad **Add Product** se us video ke fabric pieces ki photo, rate aur details dalein.
+2. **Public Website**:
+   - `/` (Home) ya `/drops` par jayein.
+   - Video player aur neeche product grid dikhegi.
+   - **Order on WhatsApp** par click karein — pre-filled message ke sath WhatsApp open hoga.
+3. **Auto-Expiry / Delete**:
+   - 5 din ke baad MongoDB TTL se drop apne aap gayab ho jayega.
+   - Admin chahe toh **Delete** button daba kar turant bhi hata sakta hai.

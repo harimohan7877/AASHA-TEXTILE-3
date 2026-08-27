@@ -66,6 +66,10 @@ export default function PublicHeader() {
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-8">
           <NavLink to="/" end className={({isActive}) => `text-sm font-medium transition-colors ${isActive ? 'text-stone-900' : 'text-stone-600 hover:text-stone-900'}`}>Home</NavLink>
+          <NavLink to="/drops" className={({isActive}) => `text-sm font-semibold transition-colors flex items-center gap-1.5 ${isActive ? 'text-amber-600' : 'text-stone-700 hover:text-amber-600'}`}>
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            Video Drops
+          </NavLink>
 
           <div className="relative" onMouseEnter={() => setCatOpen(true)} onMouseLeave={() => setCatOpen(false)}>
             <a href="/#collection" onClick={(e) => {
@@ -175,6 +179,13 @@ export default function PublicHeader() {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
               </form>
               <Link to="/" onClick={() => setOpen(false)} className="block px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">Home</Link>
+              <Link to="/drops" onClick={() => setOpen(false)} className="flex items-center justify-between px-3 py-3 rounded-lg bg-amber-50 text-amber-900 font-semibold border border-amber-200/60">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  ⚡ Video Drops
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">New</span>
+              </Link>
               <Link to="/cart" onClick={() => setOpen(false)} className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-stone-200/50 font-medium">
                 <span>🛒 Cart</span>
                 {totalItems > 0 && <span className="bg-brand-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}

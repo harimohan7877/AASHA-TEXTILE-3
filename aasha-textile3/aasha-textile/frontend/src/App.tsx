@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Login from './pages/Login';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
+import Drops from './pages/Drops';
 import Products from './pages/Products';
 import Videos from './pages/Videos';
 import Categories from './pages/Categories';
@@ -15,6 +16,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 import PublicLayout from './public/PublicLayout';
 import Home from './public/Home';
+import DropsPage from './public/DropsPage';
 import CategoryPage from './public/CategoryPage';
 import ProductDetail from './public/ProductDetail';
 import AboutPage from './public/AboutPage';
@@ -70,6 +72,7 @@ export default function App() {
       {/* ========== PUBLIC SITE ========== */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/drops" element={<DropsPage />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/about" element={<AboutPage />} />
@@ -92,6 +95,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="drops" element={<Drops />} />
         <Route path="products" element={<Products />} />
         <Route path="videos" element={<Videos />} />
         <Route path="categories" element={<Categories />} />

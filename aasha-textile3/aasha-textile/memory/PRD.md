@@ -4,15 +4,17 @@
 Build a premium, mobile-first B2B wholesale textile site with a clean admin panel. Migrated from Supabase (locked-out) to a free MongoDB stack. Must include B2B "Trust Building" elements (GST, MSME, testimonials, policies). User communicates in Hindi/Hinglish.
 
 ## Tech Stack
-- **Backend**: FastAPI + Motor (async MongoDB) + JWT auth
+- **Backend (Serverless)**: Node.js/TypeScript Serverless API Routes on Vercel (`/frontend/api/*`)
+- **Backend (Legacy/Fallback)**: FastAPI + Motor (Python)
 - **Frontend**: React + Vite + TypeScript + Tailwind CSS
-- **DB**: MongoDB (local container) — collections: products, categories, videos, settings, testimonials, admins, images
-- **Images**: Stored as base64 in MongoDB OR external `ibb.co` URLs
+- **DB**: MongoDB Atlas — collections: products, categories, videos, settings, testimonials, admins, images, drops, visits, reviews
+- **Automation**: Vercel Cron (Daily YouTube uploads check) + MongoDB TTL index (5-day auto-expiry)
+- **Images**: Stored as base64 in MongoDB OR external URLs
 
 ## Admin Login
 - URL: `/admin/login`
 - Email: `hs6579178@gmail.com`
-- Password: `787799hhh@@@` (synced from `backend/.env` on startup)
+- Password: `787799hhh@@@`
 - See `/app/memory/test_credentials.md`
 
 ---
@@ -20,6 +22,13 @@ Build a premium, mobile-first B2B wholesale textile site with a clean admin pane
 ## Implementation Status
 
 ### ✅ Completed (cumulative)
+- **Video Drops & Backend Migration (Aug 2026)** — *latest milestone*:
+  - **Phase 1**: Defined `Drop` document schema with 5-day auto-expiry; created MongoDB TTL index setup script (`setup_drops_collection.py`).
+  - **Phase 2**: YouTube auto-detection cron route (`/api/cron/check-new-video`) using YouTube uploads playlist (1 quota unit/call) + Vercel Cron config.
+  - **Phase 3**: Migrated all FastAPI endpoints to Vercel Serverless TypeScript API routes (Auth, Products, Categories, Videos, Testimonials, Reviews, Settings, Dashboard Stats, Images, SEO).
+  - **Phase 4**: Admin Video Drops management page (`/admin/drops`) with manual drop creation, product attachment with image upload/rates, and early deletion.
+  - **Phase 5**: Public Video Drops storefront (`/drops`) with responsive YouTube video player, 5-day countdown badge, and 1-click WhatsApp order CTA; featured Drops showcase on Homepage (`Home.tsx`).
+  - **Phase 6**: Updated deployment documentation (`DEPLOY.md`) for full Vercel serverless deployment and Render service retirement.
 - **Migration**: Supabase → MongoDB (`migrate.py`) — 18 products + videos + categories
 - **Auth**: JWT-based admin login, password change, password sync from `.env`
 - **Admin CRUD**: Dashboard, Products (with bulk-delete & image upload), Categories (with auto-virtual-rows from product data), Videos, Testimonials, Settings

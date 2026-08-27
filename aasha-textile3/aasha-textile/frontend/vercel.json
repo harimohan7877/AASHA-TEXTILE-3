@@ -1,5 +1,12 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/check-new-video",
+      "schedule": "0 5 * * *"
+    }
+  ],
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

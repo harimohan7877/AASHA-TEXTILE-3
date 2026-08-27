@@ -1,0 +1,144 @@
+# Aasha Textile — Backend Migration + "Video Drop" Feature
+## Master Build Prompt (for AI coding agent — Claude Code etc.)
+
+> **HOW TO USE THIS FILE**
+> Give this entire file to your AI coding agent as context, but tell it explicitly:
+> **"Read the whole plan first. Then implement ONLY Phase 1. Stop after Phase 1, show me the diff/result, and wait for my confirmation before starting Phase 2."**
+> Repeat that instruction before every phase. Do not let the agent run all phases in one shot — each phase touches a different part of the stack (DB, cron, API, admin UI, storefront UI) and needs to be tested independently before the next one builds on it.
+
+---
+
+## 0. Context Summary (do not skip — agent should read this fully)
+
+**Current stack:**
+- Frontend: React (aashatextile.com), client-rendered SPA
+- Backend: Python (FastAPI), hosted on Render (paid tier) — sleeps after ~15 min idle, causing slow first response
+- Database: MongoDB
+- An earlier version of a "daily drop" concept already exists conceptually (YouTube-linked, TTL-based auto-expiry), but needs to be rebuilt properly as described below.
+
+**Business problem being solved:**
+The shop owner (Krishna Sharma) posts a new product-showcase video on YouTube roughly every 2 days. After each video, many customers ask for photos/details of items shown in that specific video — too many to handle manually over WhatsApp/comments.
+
+**What the new system must do:**
+1. Detect new YouTube uploads automatically (no manual "add video" step, and no paid API/service).
+2. For each detected video, create a "Drop": the video embedded at the top, followed by a product grid (photo + details) for items shown in that video, curated by the admin.
+3. Each Drop auto-disappears from the public site **5 days** after being added — fully automatic, no manual action needed.
+4. Admin can also **manually delete a Drop early** from the admin panel, any time before the 5 days are up.
+5. Whole backend moves off Render (Python) onto **Vercel**, so there's no separate paid always-on server and no cold-sleep delay.
+
+**Target stack after migration:**
+- Frontend: same React/Vite app (or Next.js if agent recommends — confirm with user before changing framework)
+- Backend: **Next.js API routes** (Node/TypeScript) deployed on Vercel — replacing FastAPI entirely
+- Database: MongoDB stays (Atlas, so it's already remote — no change needed there)
+- Scheduling: **Vercel Cron** (Hobby plan = max once/day, which is enough since uploads are every ~2 days)
+- Auto-expiry: **MongoDB TTL index** on the Drops collection (native Mongo feature, free, no extra cron needed for deletion)
+
+**Constraints:**
+- Must stay on free/existing-cost tools — no new paid services.
+- Backend logic is simple CRUD, not heavy computation — safe to rewrite in Node.
+- User (Tejas) will run each phase through an AI coding agent one at a time, so every phase below must be independently completable and testable.
+
+---
+
+## Phase 1 — Data Model & DB Setup (no user-facing change yet)
+
+**Goal:** Add the new `Drop` collection/schema without touching any existing working feature.
+
+Tasks:
+1. Define a `Drop` document shape:
+   - `youtubeVideoId` (string, unique)
+   - `youtubeUrl` (string)
+   - `publishedAt` (date — from YouTube)
+   - `addedAt` (date — when our system created the Drop)
+   - `expiresAt` (date — `addedAt + 5 days`)
+   - `products`: array of `{ imageUrl, title, price, details, sizeOptions?, inStock }`
+   - `status`: `"active" | "deleted_manually" | "expired"`
+2. Create a **MongoDB TTL index** on `expiresAt` (expireAfterSeconds: 0) so Mongo auto-deletes the document itself once the time passes — no cron job needed for deletion.
+3. Write this as a migration/setup script the agent can run once, not inline app logic.
+4. **Do not** build ingestion, admin UI, or storefront UI yet.
+
+**Stop condition:** Confirm the collection + TTL index exist in MongoDB Atlas (check the index in Atlas UI or via a script) before moving to Phase 2.
+
+---
+
+## Phase 2 — YouTube Auto-Detection (backend only, no UI yet)
+
+**Goal:** A serverless function that checks the shop's YouTube channel for a new upload and creates a Drop automatically — no manual entry, no paid API tier.
+
+Tasks:
+1. Use the **YouTube Data API v3 free tier** (10,000 quota units/day, no cost). Use the channel's **"uploads" playlist** (`playlistItems.list`) instead of `search.list` — this costs **1 unit per call** instead of 100, so even frequent polling stays well inside the free quota.
+2. Get the channel's uploads-playlist ID once (from `channels.list`) and hardcode/store it in an env var.
+3. Build `/api/cron/check-new-video` route:
+   - Fetch latest item from the uploads playlist.
+   - If its `videoId` isn't already in the `Drop` collection → create a new Drop with `products: []` (empty, admin fills these in next phase) and `expiresAt = now + 5 days`.
+   - If it already exists → do nothing.
+4. Add this route to `vercel.json` as a cron job, **once per day** (Hobby plan limit). Note for user: since uploads happen every ~2 days, once-daily polling is sufficient; if faster detection is ever needed later, a free external pinger (e.g., cron-job.org) can hit the same route more often without upgrading Vercel — mention this as an option, don't build it now.
+5. Store the YouTube API key in Vercel environment variables, never in code.
+
+**Stop condition:** Confirm a real test video creates a Drop document correctly (check DB), with correct `expiresAt`. No UI changes yet.
+
+---
+
+## Phase 3 — Rewrite Core Backend Endpoints (FastAPI → Next.js API routes)
+
+**Goal:** Move existing product/catalog CRUD endpoints from Python/FastAPI to Node/Next.js API routes, one resource at a time, so the site keeps working throughout.
+
+Tasks (do sub-steps one at a time, testing each before the next):
+1. List every existing FastAPI endpoint currently in use (agent should scan the Python codebase first and produce this list before writing any new code).
+2. For each endpoint group (e.g. products, categories, orders/inquiries, admin auth):
+   - Recreate it as a Next.js API route with the same request/response shape, so the frontend doesn't need changes yet.
+   - Point it at the same MongoDB database (no data migration needed, same DB).
+   - Test that endpoint in isolation (Postman/curl) before moving to the next group.
+3. Only after **all** groups are recreated and tested, switch the frontend's API base URL from the old Render URL to the new Vercel URL.
+4. Keep the Render service running (but idle) until the new endpoints are confirmed fully working in production — do not delete/cancel Render yet.
+
+**Stop condition:** Every old endpoint has a working Vercel equivalent, frontend is pointed at Vercel, and the site works end-to-end with zero calls going to Render.
+
+---
+
+## Phase 4 — Admin Panel: Manage Drops
+
+**Goal:** Let the admin see active Drops, add product details/photos to a Drop, and delete a Drop early.
+
+Tasks:
+1. Admin page/section: list of Drops (newest first), each showing thumbnail, upload date, days-until-auto-expiry, product count.
+2. "Add product to this Drop" form: image upload, title, price, details, stock status.
+3. "Delete now" button per Drop → sets `status: "deleted_manually"` and removes it from public queries immediately (either delete the doc outright, or just filter it out — agent should pick the simpler option and confirm with user).
+4. Make sure deleting early doesn't break the TTL cleanup later (if doc is already gone, TTL has nothing to do — that's fine).
+
+**Stop condition:** Admin can create a Drop's product list and delete a Drop early, verified in the admin UI.
+
+---
+
+## Phase 5 — Storefront: Show Drops
+
+**Goal:** Public-facing section showing the video-drop feed as described.
+
+Tasks:
+1. New section/page: list of active Drops, newest first.
+2. Each Drop renders: embedded YouTube video on top → product grid (photo, title, price, details) below it.
+3. Only Drops with `status: "active"` (and not expired) are shown — expired ones are already gone from DB via TTL, so the query is naturally just "all remaining active Drops."
+4. Keep existing "browse full catalog" shopping experience untouched — this is an addition, not a replacement.
+
+**Stop condition:** A real Drop with test products displays correctly on the live site, disappears automatically after 5 days (can test with a shortened expiry like 2 minutes first, then set back to 5 days).
+
+---
+
+## Phase 6 — Cutover & Cleanup
+
+**Goal:** Fully retire Render and confirm everything runs on Vercel only.
+
+Tasks:
+1. Confirm zero traffic/errors on Render logs for at least a few days after Phase 3 cutover.
+2. Cancel/downgrade the Render service.
+3. Update any docs/env references from Render URL to Vercel URL.
+4. Final end-to-end test: new YouTube upload → Drop auto-created → admin adds products → shows on site → auto-expires after 5 days, or admin deletes early.
+
+---
+
+## Notes for the agent (repeat at the top of every phase prompt)
+
+- Work on **one phase only**, then stop and wait for confirmation.
+- Do not touch code outside the current phase's scope.
+- Do not delete or bypass the old Python backend until Phase 6 explicitly says so.
+- Ask before introducing any new paid service or API tier.

@@ -114,6 +114,7 @@ export default function PublicFooter() {
           <h4 className="text-white font-semibold mb-4">Information</h4>
           <ul className="space-y-2 text-sm">
             <li><Link to="/" className="hover:text-white">Home</Link></li>
+            <li><Link to="/drops" className="text-amber-400 hover:text-amber-300 font-medium">⚡ Video Drops</Link></li>
             <li><Link to="/about" className="hover:text-white">About Us</Link></li>
             <li><Link to="/policies/shipping" className="hover:text-white">Shipping Info</Link></li>
             <li><Link to="/policies/returns" className="hover:text-white">Return Policy</Link></li>

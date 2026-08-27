@@ -119,6 +119,36 @@ export function useCategories() {
   });
 }
 
+export type DropProduct = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  price: string;
+  details: string;
+  sizeOptions?: string[];
+  inStock: boolean;
+};
+
+export type Drop = {
+  id: string;
+  youtubeVideoId: string;
+  youtubeUrl: string;
+  title: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  addedAt: string;
+  expiresAt: string;
+  products: DropProduct[];
+  status: 'active' | 'deleted_manually' | 'expired';
+};
+
+export function useDrops() {
+  return useQuery({
+    queryKey: ['drops'],
+    queryFn: () => api.get('/public/drops').then(r => (r.data.items || []) as Drop[]),
+  });
+}
+
 export function useVideos() {
   return useQuery({
     queryKey: ['videos'],

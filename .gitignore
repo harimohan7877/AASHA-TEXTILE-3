@@ -1,0 +1,27 @@
+# Node dependencies and build
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.env
+**/.env
+.env.local
+**/.env.local
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+**/*.pyc
+.venv/
+**/.venv/
+env/
+**/env/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
