@@ -124,78 +124,68 @@ def login(email: str, password: str) -> str:
     return token
 
 
-# =============================================================================
-# FRAME CAPTURE (YT-DLP + FFMPEG STREAMING EXTRACTION)
-# =============================================================================
+def get_ffmpeg_binary() -> str:
+    """Return path to ffmpeg binary (from imageio-ffmpeg or system PATH)."""
+    try:
+        import imageio_ffmpeg
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if exe and os.path.exists(exe):
+            return exe
+    except Exception:
+        pass
+    return "ffmpeg"
+
+
+_STREAM_URL_CACHE: Dict[str, str] = {}
+
+
+def get_video_stream_url(video_id: str) -> Optional[str]:
+    """Get direct mp4 stream URL from yt-dlp (cached per video)."""
+    if video_id in _STREAM_URL_CACHE:
+        return _STREAM_URL_CACHE[video_id]
+
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    cmd_ytdlp = [
+        "yt-dlp",
+        "-g",
+        "-f", "bestvideo[ext=mp4]/best[ext=mp4]/best",
+        video_url
+    ]
+    try:
+        proc = subprocess.run(cmd_ytdlp, capture_output=True, text=True, timeout=20)
+        if proc.returncode == 0 and proc.stdout.strip():
+            url = proc.stdout.strip().split("\n")[0]
+            _STREAM_URL_CACHE[video_id] = url
+            return url
+    except Exception:
+        pass
+    return None
+
+
 def capture_frame_from_youtube(video_id: str, timestamp_sec: int, output_path: Path) -> bool:
     """
-    Extract a single crisp HD frame from YouTube at a specific timestamp
-    WITHOUT downloading the entire video.
+    Extract a single crisp HD frame from YouTube at a specific timestamp in ~1-2 seconds.
     """
     time_str = seconds_to_timestamp(timestamp_sec)
-    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    ffmpeg_exe = get_ffmpeg_binary()
+    stream_url = get_video_stream_url(video_id)
 
-    # Method A: Try yt-dlp streaming URL + ffmpeg
-    try:
-        # Get stream URL from yt-dlp
-        cmd_ytdlp = [
-            "yt-dlp",
-            "-g",
-            "-f", "bestvideo[ext=mp4]/best[ext=mp4]/best",
-            video_url
+    if stream_url:
+        cmd_ffmpeg = [
+            ffmpeg_exe,
+            "-y",
+            "-ss", time_str,
+            "-i", stream_url,
+            "-frames:v", "1",
+            "-q:v", "2",
+            str(output_path)
         ]
-        proc = subprocess.run(cmd_ytdlp, capture_output=True, text=True, timeout=30)
-        if proc.returncode == 0 and proc.stdout.strip():
-            stream_url = proc.stdout.strip().split("\n")[0]
-
-            # Use ffmpeg to grab exact frame from stream
-            cmd_ffmpeg = [
-                "ffmpeg",
-                "-y",
-                "-ss", time_str,
-                "-i", stream_url,
-                "-frames:v", "1",
-                "-q:v", "2",
-                str(output_path)
-            ]
-            ff_proc = subprocess.run(cmd_ffmpeg, capture_output=True, timeout=30)
+        try:
+            ff_proc = subprocess.run(cmd_ffmpeg, capture_output=True, timeout=15)
             if ff_proc.returncode == 0 and output_path.exists() and output_path.stat().st_size > 1000:
                 return True
-    except Exception:
-        pass
-
-    # Method B: Fallback - use yt-dlp section downloader
-    try:
-        start_sec = max(0, timestamp_sec - 1)
-        end_sec = timestamp_sec + 2
-        cmd_clip = [
-            "yt-dlp",
-            "--download-sections", f"*{start_sec}-{end_sec}",
-            "--force-keyframes-at-cuts",
-            "-o", str(output_path.with_suffix(".mp4")),
-            video_url
-        ]
-        subprocess.run(cmd_clip, capture_output=True, timeout=45)
-        temp_mp4 = output_path.with_suffix(".mp4")
-        if temp_mp4.exists():
-            cmd_extract = [
-                "ffmpeg",
-                "-y",
-                "-ss", "00:00:01",
-                "-i", str(temp_mp4),
-                "-frames:v", "1",
-                "-q:v", "2",
-                str(output_path)
-            ]
-            subprocess.run(cmd_extract, capture_output=True, timeout=15)
-            try:
-                temp_mp4.unlink()
-            except Exception:
-                pass
-            if output_path.exists() and output_path.stat().st_size > 1000:
-                return True
-    except Exception:
-        pass
+        except Exception:
+            pass
 
     return False
 
