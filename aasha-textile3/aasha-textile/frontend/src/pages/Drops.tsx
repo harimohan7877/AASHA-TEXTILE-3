@@ -178,7 +178,7 @@ export default function Drops() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const { data } = await api.post('/images/upload', fd, {
+      const { data } = await api.post('/images/upload?is_drop_image=true&expires_in_days=5', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setProductForm((prev) => ({ ...prev, imageUrl: data.url }));

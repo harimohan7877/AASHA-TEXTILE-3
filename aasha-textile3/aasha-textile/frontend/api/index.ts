@@ -12,6 +12,19 @@ const JWT_SECRET = process.env.JWT_SECRET || 'aasha-secret-key-fallback-2026';
 
 let cachedClient: MongoClient | null = null;
 let cachedDb: Db | null = null;
+let indexesEnsured = false;
+
+async function ensureIndexes(db: Db) {
+  if (indexesEnsured) return;
+  try {
+    // 5-day auto expiry on drops and temporary drop images
+    await db.collection('drops').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+    await db.collection('images').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+    indexesEnsured = true;
+  } catch (e) {
+    // ignore if index already exists
+  }
+}
 
 async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   if (!uri) {
@@ -19,6 +32,7 @@ async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   }
 
   if (cachedClient && cachedDb) {
+    ensureIndexes(cachedDb).catch(() => {});
     return { client: cachedClient, db: cachedDb };
   }
 
@@ -28,6 +42,7 @@ async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
 
   cachedClient = client;
   cachedDb = db;
+  ensureIndexes(db).catch(() => {});
   return { client, db };
 }
 
@@ -355,9 +370,24 @@ export default async function handler(req: any, res: any) {
         if (req.method === 'DELETE') {
           const user = requireAuth(req);
           if (!user) return res.status(401).json({ detail: 'Not authenticated' });
-          const result = await db.collection('drops').deleteOne({ $or: [{ id: dropId }, { youtubeVideoId: dropId }] });
-          if (result.deletedCount === 0) return res.status(404).json({ detail: 'Drop not found' });
-          return res.status(200).json({ message: 'Drop deleted successfully' });
+
+          const drop = await db.collection('drops').findOne({ $or: [{ id: dropId }, { youtubeVideoId: dropId }] });
+          if (!drop) return res.status(404).json({ detail: 'Drop not found' });
+
+          // Clean up any MongoDB images attached to this drop
+          const imageIds: string[] = [];
+          (drop.products || []).forEach((p: any) => {
+            if (p.imageUrl) {
+              const match = p.imageUrl.match(/\/api\/images\/([a-zA-Z0-9-]+)/);
+              if (match) imageIds.push(match[1]);
+            }
+          });
+          if (imageIds.length > 0) {
+            await db.collection('images').deleteMany({ id: { $in: imageIds } });
+          }
+
+          await db.collection('drops').deleteOne({ $or: [{ id: dropId }, { youtubeVideoId: dropId }] });
+          return res.status(200).json({ message: 'Drop and associated images deleted successfully' });
         }
       }
     }
@@ -727,13 +757,20 @@ export default async function handler(req: any, res: any) {
           }
         }
         const imageId = crypto.randomUUID();
-        const doc = {
+        const doc: any = {
           id: imageId,
           filename: filename || `image-${imageId}.jpg`,
           content_type: content_type || 'image/jpeg',
           data,
           created_at: new Date(),
         };
+
+        // If uploaded as a drop product image, set 5-day auto-expiry
+        if (body.is_drop_image || body.expires_in_days || query.is_drop_image) {
+          const days = Number(body.expires_in_days) || 5;
+          doc.expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+        }
+
         await db.collection('images').insertOne(doc);
         return res.status(200).json({ id: imageId, url: `/api/images/${imageId}`, filename: doc.filename });
       }
