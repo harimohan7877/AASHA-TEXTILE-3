@@ -327,11 +327,12 @@ export default async function handler(req: any, res: any) {
 
           const addedAt = new Date();
           const expiresAt = new Date(addedAt.getTime() + 5 * 24 * 60 * 60 * 1000);
+          const dropTitle = title || 'Aasha Textile Video Drop';
           const newDrop = {
             id: crypto.randomUUID(),
             youtubeVideoId: vid,
             youtubeUrl: youtubeUrl || `https://www.youtube.com/watch?v=${vid}`,
-            title: title || 'Aasha Textile Video Drop',
+            title: dropTitle,
             thumbnailUrl: thumbnailUrl || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
             publishedAt: addedAt,
             addedAt,
@@ -340,6 +341,24 @@ export default async function handler(req: any, res: any) {
             status: 'active',
           };
           await db.collection('drops').insertOne(newDrop);
+
+          // 🎯 1 TEER 2 SHIKAR: Auto-save permanently to 'videos' collection (See Our Collection)
+          const formattedDate = addedAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+          const permanentTitle = `${dropTitle}    ${formattedDate}`;
+          await db.collection('videos').updateOne(
+            { video_id: vid },
+            {
+              $set: {
+                video_id: vid,
+                title: permanentTitle,
+                thumbnail_url: newDrop.thumbnailUrl,
+                sort_order: 0,
+                created_at: addedAt,
+              },
+            },
+            { upsert: true }
+          );
+
           return res.status(201).json(cleanDoc(newDrop));
         }
       } else {
@@ -365,6 +384,20 @@ export default async function handler(req: any, res: any) {
             { returnDocument: 'after' }
           );
           if (!result) return res.status(404).json({ detail: 'Drop not found' });
+
+          // Also update permanent video title if title was changed
+          if (body.title && (result.youtubeVideoId || dropId)) {
+            const vid = result.youtubeVideoId || dropId;
+            const dropDate = new Date(result.addedAt || Date.now());
+            const formattedDate = dropDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            const permanentTitle = `${body.title}    ${formattedDate}`;
+            await db.collection('videos').updateOne(
+              { video_id: vid },
+              { $set: { title: permanentTitle, thumbnail_url: result.thumbnailUrl || `https://img.youtube.com/vi/${vid}/hqdefault.jpg` } },
+              { upsert: true }
+            );
+          }
+
           return res.status(200).json(cleanDoc(result));
         }
         if (req.method === 'DELETE') {

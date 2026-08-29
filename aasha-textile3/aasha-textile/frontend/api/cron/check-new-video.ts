@@ -109,6 +109,23 @@ export default async function handler(req: any, res: any) {
 
     await dropsCollection.insertOne(newDrop);
 
+    // 5. 🎯 1 TEER 2 SHIKAR: Auto-save permanently into 'videos' collection (See Our Collection)
+    const formattedDate = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const permanentTitle = `${title}    ${formattedDate}`;
+    await db.collection('videos').updateOne(
+      { video_id: videoId },
+      {
+        $set: {
+          video_id: videoId,
+          title: permanentTitle,
+          thumbnail_url: thumbnailUrl,
+          sort_order: 0,
+          created_at: now,
+        },
+      },
+      { upsert: true }
+    );
+
     return res.status(201).json({
       status: 'ok',
       action: 'created',
