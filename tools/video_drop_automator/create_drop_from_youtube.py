@@ -345,9 +345,14 @@ def main():
 
     raw_json = "\n".join(lines).strip()
 
-    # Clean markdown if user copied ```json ... ```
-    raw_json = re.sub(r"^```(?:json)?", "", raw_json, flags=re.IGNORECASE)
-    raw_json = re.sub(r"```$", "", raw_json).strip()
+    # Automatically extract JSON array [...] even if extra text or headings are present
+    match = re.search(r"\[\s*\{.*\}\s*\]", raw_json, flags=re.DOTALL)
+    if match:
+        raw_json = match.group(0)
+    else:
+        # Clean markdown if user copied ```json ... ```
+        raw_json = re.sub(r"^```(?:json)?", "", raw_json, flags=re.IGNORECASE)
+        raw_json = re.sub(r"```$", "", raw_json).strip()
 
     try:
         gemini_items = json.loads(raw_json)
@@ -355,6 +360,7 @@ def main():
             raise ValueError("Input JSON must be a list of products.")
     except Exception as e:
         print(f"❌ Invalid JSON format: {e}")
+        print("💡 Tip: Make sure the JSON starts with '[' and ends with ']'")
         return
 
     print(f"\n📦 Found {len(gemini_items)} products from Gemini!")
