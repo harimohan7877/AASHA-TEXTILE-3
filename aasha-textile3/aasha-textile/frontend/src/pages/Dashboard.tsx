@@ -63,12 +63,12 @@ export default function Dashboard() {
             </div>
             <Link to="/categories" className="text-xs text-brand-600 hover:underline">Manage</Link>
           </div>
-          {stats.by_category.length === 0 ? (
+          {(!stats.by_category || stats.by_category.length === 0) ? (
             <div className="text-sm text-slate-500 py-10 text-center">No categories yet.</div>
           ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.by_category} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <BarChart data={stats.by_category || []} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis dataKey="name" fontSize={12} stroke="#64748b" />
                   <YAxis allowDecimals={false} fontSize={12} stroke="#64748b" />
@@ -86,8 +86,8 @@ export default function Dashboard() {
             <Link to="/products" className="text-xs text-brand-600 hover:underline">View all</Link>
           </div>
           <div className="space-y-3">
-            {stats.recent_products.length === 0 && <div className="text-sm text-slate-500 py-6 text-center">No products yet.</div>}
-            {stats.recent_products.map((p) => (
+            {(!stats.recent_products || stats.recent_products.length === 0) && <div className="text-sm text-slate-500 py-6 text-center">No products yet.</div>}
+            {(stats.recent_products || []).map((p) => (
               <div key={p.id} className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
                   {p.image_url ? <img src={resolveImage(p.image_url)} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full grid place-items-center text-slate-400"><Package size={14}/></div>}

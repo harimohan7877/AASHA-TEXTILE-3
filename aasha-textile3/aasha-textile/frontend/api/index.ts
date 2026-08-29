@@ -767,28 +767,70 @@ export default async function handler(req: any, res: any) {
       const totalDrops = await db.collection('drops').countDocuments({ status: 'active' });
       const totalTestimonials = await db.collection('testimonials').countDocuments();
       const totalReviews = await db.collection('reviews').countDocuments();
-      const totalVisits = await db.collection('visits').countDocuments();
+      const totalPageviews = await db.collection('visits').countDocuments();
 
       const categoryBreakdown = await db.collection('products').aggregate([
         { $group: { _id: '$category', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]).toArray();
 
+      const byCategory = categoryBreakdown.map((c) => ({
+        name: c._id || 'Uncategorized',
+        count: c.count || 0,
+      }));
+
       const recentProducts = await db.collection('products').find({}).sort({ created_at: -1 }).limit(5).toArray();
+
+      // Today's visitors
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const todayVisitorsList = await db.collection('visits').distinct('ip', { timestamp: { $gte: startOfToday } });
+      const todayVisitors = todayVisitorsList.length || 0;
+
+      // Last 7 days daily stats
+      const dailyStats: Array<{ name: string; pageviews: number; visitors: number }> = [];
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+        const pageviews = await db.collection('visits').countDocuments({
+          timestamp: { $gte: dayStart, $lte: dayEnd },
+        });
+        const visitorsList = await db.collection('visits').distinct('ip', {
+          timestamp: { $gte: dayStart, $lte: dayEnd },
+        });
+
+        dailyStats.push({
+          name: `${d.getDate()} ${monthNames[d.getMonth()]}`,
+          pageviews: pageviews || 0,
+          visitors: visitorsList.length || 0,
+        });
+      }
 
       return res.status(200).json({
         total_products: totalProducts,
+        featured: featuredProducts,
+        featured_products: featuredProducts,
+        in_stock: activeProducts,
         active_products: activeProducts,
         out_of_stock: outOfStock,
-        featured_products: featuredProducts,
-        total_categories: totalCategories,
         total_videos: totalVideos,
+        total_categories: totalCategories,
         total_drops: totalDrops,
         total_testimonials: totalTestimonials,
         total_reviews: totalReviews,
-        total_visits: totalVisits,
-        category_breakdown: categoryBreakdown.map((c) => ({ category: c._id || 'Uncategorized', count: c.count })),
+        total_pageviews: totalPageviews,
+        total_visits: totalPageviews,
+        today_visitors: todayVisitors,
+        by_category: byCategory,
+        category_breakdown: byCategory,
         recent_products: recentProducts.map(cleanDoc),
+        daily_stats: dailyStats,
       });
     }
 
