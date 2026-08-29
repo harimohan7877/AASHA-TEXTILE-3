@@ -26,4 +26,7 @@ Thumbs.db
 .vscode/
 .idea/
 safe/
+temp/
+**/temp/
+*.log
 
