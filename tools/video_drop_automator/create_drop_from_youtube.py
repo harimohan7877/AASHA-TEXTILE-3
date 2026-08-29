@@ -327,9 +327,20 @@ def main():
     while True:
         try:
             line = input()
-            if line.strip().upper() == "DONE":
+            stripped = line.strip()
+            if stripped.upper() == "DONE" or stripped.upper().endswith("DONE"):
+                if stripped.upper() != "DONE":
+                    clean_line = re.sub(r"DONE$", "", line, flags=re.IGNORECASE).strip()
+                    if clean_line:
+                        lines.append(clean_line)
                 break
             lines.append(line)
+            # If line ends with ']' and valid JSON is already formed, break automatically
+            if stripped.endswith("]") and "[" in "\n".join(lines):
+                test_str = "\n".join(lines)
+                match_test = re.search(r"\[\s*\{.*\}\s*\]", test_str, flags=re.DOTALL)
+                if match_test:
+                    break
         except EOFError:
             break
 
